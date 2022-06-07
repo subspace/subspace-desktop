@@ -14,9 +14,9 @@ q-layout(view="hHh lpr fFf")
               .col
                 p.no-margin(style="font-size: 12px") {{ lang.IncentivizedTooltip }}
           .col-auto.q-mr-md.relative-position(v-if="global.nodeName || oldNodeName")
-            // TODO: add .cursor-pointer and @click="onNameClick" after node restarting is implemented on the backend
-            q-badge(
+            q-badge.cursor-pointer(
               v-if="!isEdittingName"
+              @click="onNameClick"
               color="blue-8"
               text-color="white"
             )
@@ -96,6 +96,10 @@ export default defineComponent({
       } else {
         global.setNodeName(global.data.nodeName)
         await appConfig.update({ nodeName: global.data.nodeName })
+        // TODO: consider restarting elsewhere
+        console.log('Restarting...');
+        const config = await appConfig.read();
+        this.$client.startNode(config.plot.location, global.data.nodeName);
       }
 
       this.setEditName(false);
