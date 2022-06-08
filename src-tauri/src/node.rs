@@ -88,7 +88,7 @@ async fn init_node(base_directory: PathBuf, node_name: String) -> Result<JoinHan
         }
     });
 
-    Ok(full_client.task_manager)
+    Ok(node_handle)
 }
 
 // TODO: Allow customization of a bunch of these things
