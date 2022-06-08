@@ -35,7 +35,7 @@ subspace-farmer = { git = "https://github.com/subspace/subspace", rev = "17e72ba
 subspace-runtime = { git = "https://github.com/subspace/subspace", rev = "17e72ba61f9ee62b3df357dc03196330dd134285" }
 subspace-service = { git = "https://github.com/subspace/subspace", rev = "17e72ba61f9ee62b3df357dc03196330dd134285" }
 subspace-solving = { git = "https://github.com/subspace/subspace", rev = "17e72ba61f9ee62b3df357dc03196330dd134285" }
-tokio = { version = "1.11.0", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.19.2", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1.31"
 tracing-subscriber = "0.3.11"
 

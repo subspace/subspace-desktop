@@ -57,6 +57,12 @@ pub(crate) async fn start_node(path: String, node_name: String) {
     // if there is already a node running, stop it
     if let Some(guard) = node_handle_guard.take() {
         guard.abort();
+        loop {
+            if guard.is_finished() {
+                break;
+            }
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
     }
     // start the new node, and store its handle
     *node_handle_guard = Some(init_node(path.into(), node_name).await.unwrap());
@@ -82,7 +88,7 @@ async fn init_node(base_directory: PathBuf, node_name: String) -> Result<JoinHan
         }
     });
 
-    Ok(node_handle)
+    Ok(full_client.task_manager)
 }
 
 // TODO: Allow customization of a bunch of these things
