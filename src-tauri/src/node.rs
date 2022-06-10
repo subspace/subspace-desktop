@@ -52,20 +52,34 @@ impl NativeExecutionDispatch for ExecutorDispatch {
 #[tauri::command]
 pub(crate) async fn start_node(path: String, node_name: String) {
     static NODE_HANDLE: Mutex<Option<JoinHandle<()>>> = Mutex::const_new(None);
-
     let mut node_handle_guard = NODE_HANDLE.lock().await;
     // if there is already a node running, stop it
     if let Some(guard) = node_handle_guard.take() {
+        println!("NODE CRASH DEBUG: found a previous handle");
         guard.abort();
+        println!("NODE CRASH DEBUG: after abort on handle");
+        // tokio::time::sleep(std::time::Duration::from_millis(20000)).await;
+        /*
+        If we enable the commented out sleep, then the farmer crashes with the below error:
+        `Thread 'tokio-runtime-worker' panicked at 'called `Result::unwrap()` on an `Err` value: jsonrpsee error:
+        RPC call failed: ErrorObject { code: InvalidParams, message: "Invalid params", data: None }',
+        src/farmer.rs:25`
+        */
         loop {
+            println!("NODE CRASH DEBUG: checking `is_finished`");
             if guard.is_finished() {
+                println!("NODE CRASH DEBUG: `is_finished` returned true");
                 break;
             }
+            println!("NODE CRASH DEBUG: waiting for 500 ms");
+            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
         }
-        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        println!("NODE CRASH DEBUG: broke out of the loop");
     }
     // start the new node, and store its handle
+    println!("NODE CRASH DEBUG: starting new node instance");
     *node_handle_guard = Some(init_node(path.into(), node_name).await.unwrap());
+    println!("NODE CRASH DEBUG: new instance creation successful");
 }
 
 async fn init_node(base_directory: PathBuf, node_name: String) -> Result<JoinHandle<()>> {
