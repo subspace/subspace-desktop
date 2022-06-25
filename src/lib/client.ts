@@ -5,16 +5,18 @@ import * as event from "@tauri-apps/api/event"
 import { invoke } from "@tauri-apps/api/tauri"
 import { reactive } from "vue"
 import * as process from "process"
-import * as util from "../lib/util"
+import type { SyncState, EventRecord } from '@polkadot/types/interfaces/system';
+import { IU8a } from "@polkadot/types-codec/types"
+
+import * as util from "./util"
 import { appConfig } from "./appConfig"
 import { getStoredBlocks, storeBlocks } from "./blockStorage"
 import {
   emptyClientData,
   FarmedBlock,
   SubPreDigest
-} from "../lib/types"
-import type { SyncState, EventRecord } from '@polkadot/types/interfaces/system';
-import { IU8a } from "@polkadot/types-codec/types"
+} from "./types"
+import { createApi } from './util';
 
 const tauri = { event, invoke }
 const SUNIT = 1000000000000000000n
@@ -188,3 +190,10 @@ export class Client {
     this.mnemonic = ""
   }
 }
+
+const LOCAL_RPC = process.env.LOCAL_API_WS || "ws://localhost:9947"
+const api = createApi(LOCAL_RPC);
+// TODO: this is not nice
+const client = new Client(api);
+
+export default client;
