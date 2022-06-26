@@ -1,25 +1,29 @@
-import { createMachine } from 'xstate';
+import { createMachine, send } from 'xstate';
 
-import client from './client';
-import { SyncState } from './types';
-import * as util from "./util";
+import client from '../client';
+// import { SyncState } from '../types';
+import * as util from "../util";
+import syncMachine from "./syncing";
+import farmMachine from "./farming";
+
+// const syncMachine = () => new Promise((resolve) => setTimeout(resolve, 7000));
 
 export interface StateContext {
   // rewardAddress: string;
   nodeName: string;
-  syncState: SyncState;
-  isSyncing: boolean;
+  // syncState: SyncState;
+  // isSyncing: boolean;
 }
 
 const context = {
   // rewardAddress: '',
   nodeName: '',
-  isSyncing: false,
-  syncState: {
-    startingBlock: 0,
-    currentBlock: 0,
-    highestBlock: 0,
-  },
+  // isSyncing: false,
+  // syncState: {
+  //   startingBlock: 0,
+  //   currentBlock: 0,
+  //   highestBlock: 0,
+  // },
   // consider adding: 
   // locale
   // isFirstLoad + setFirstLoad method,
@@ -35,14 +39,6 @@ async function startNode(context: StateContext, event: any) {
   } else {
     util.errorLogger("DASHBOARD | node name was empty when tried to start node")
   }
-}
-
-async function syncService() {
-  return new Promise((resolve) => setTimeout(resolve, 7000));
-}
-
-async function farmService() {
-  return new Promise((resolve) => setTimeout(resolve, 7000));
 }
 
 const stateMachine = createMachine({
@@ -78,9 +74,8 @@ const stateMachine = createMachine({
     },
     syncing: {
       invoke: {
-        id: 'syncService',
-        // TODO: has to be syncing state machine
-        src: syncService,
+        id: 'syncMachine',
+        src: syncMachine,
         onError: {
           target: 'syncingError',
           // TODO: handle errors
@@ -90,7 +85,7 @@ const stateMachine = createMachine({
           target: 'farming',
           actions: () => console.log('NODE SYNCED > FARMING'),
         },
-      }
+      },
     },
     syncingError: {
       on: {
@@ -100,9 +95,9 @@ const stateMachine = createMachine({
     },
     farming: {
       invoke: {
-        id: 'farmService',
+        id: 'farmMachine',
         // TODO: has to be farming state machine
-        src: farmService,
+        src: farmMachine,
         onError: {
           target: 'farmingError',
           // TODO: handle errors
