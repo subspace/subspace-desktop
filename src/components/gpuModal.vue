@@ -11,7 +11,7 @@ q-dialog(@hide="onDialogHide" persistent ref="dialog")
     q-card-section.q-pt-none
       | We have found NVidia GTX 1060 in your system. Do you want to utilize that GPU for faster plotting?
     q-card-actions(align='right')
-      q-btn(flat='', label="No, don't use it", @click="onCancelClick" color='primary', v-close-popup='')
+      q-btn(flat='', label="No, don't use it!", @click="onCancelClick" color='primary', v-close-popup='')
       q-btn(flat='', label='Ok, use it!', @click="onOKClick" color='primary', v-close-popup='')
 
 
