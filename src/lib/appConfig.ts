@@ -15,6 +15,7 @@ interface Config {
   launchOnBoot: boolean,
   version: string,
   nodeName: string,
+  gpu: boolean,
 }
 
 const emptyConfig: Config = {
@@ -23,6 +24,7 @@ const emptyConfig: Config = {
   launchOnBoot: true,
   version: process.env.APP_VERSION as string,
   nodeName: "",
+  gpu: false,
 }
 
 export const appConfig = {
@@ -92,12 +94,14 @@ export const appConfig = {
       rewardAddress,
       version,
       nodeName,
+      gpu,
     }: {
       plot?: Plot;
       launchOnBoot?: boolean;
       rewardAddress?: string;
       version?: string;
       nodeName?: string;
+      gpu?: boolean;
     }
   ): Promise<void> {
     const newAppConfig = await this.read()
@@ -106,6 +110,7 @@ export const appConfig = {
     if (rewardAddress !== undefined) newAppConfig.rewardAddress = rewardAddress
     if (version !== undefined) newAppConfig.version = version
     if (nodeName !== undefined) newAppConfig.nodeName = nodeName
+    if (gpu !== undefined) newAppConfig.gpu = gpu
     await this.write(newAppConfig)
   },
   showErrorModal(): DialogChainObject {

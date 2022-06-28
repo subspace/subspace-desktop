@@ -125,6 +125,7 @@ import { globalState as global } from "../lib/global"
 import { appConfig } from "../lib/appConfig"
 import { appData, appDataDialog } from "../lib/appData"
 import mnemonicModal from "../components/mnemonicModal.vue"
+import gpuModal from "../components/gpuModal.vue"
 
 const tauri = { path, fs }
 const lang = global.data.loc.text.setupPlot
@@ -271,6 +272,8 @@ export default defineComponent({
           plot: { location: this.plotDirectory, sizeGB: this.allocatedGB },
           nodeName,
         })
+
+      await this.askGPU()
       this.$router.replace({ name: "plottingProgress" })
     },
     async updateDriveStats() {
@@ -304,6 +307,23 @@ export default defineComponent({
         modal?.onDismiss(async () => {
           await appConfig.update({
             rewardAddress: this.rewardAddress
+          })
+          resolve()
+        })
+      })
+    },
+    async askGPU(): Promise<void> {
+      const modal = await util.showModal(gpuModal);
+      return new Promise((resolve) => {
+        modal?.onCancel(async () => {
+          await appConfig.update({
+            gpu: false
+          })
+          resolve()
+        })
+        modal?.onOk(async () => {
+          await appConfig.update({
+            gpu: true
           })
           resolve()
         })

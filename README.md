@@ -10,6 +10,12 @@ Below is not necessarily strict boundaries, but rather what we have tested and c
 - Ubuntu 20.04 and 22.04
 - macOS 11 and 12
 
+# GPU support
+If you want to utilize your GPU for faster plotting, you need to have OpenCL drivers installed. We currently support AMD, NVIDIA, and Intel GPUs.
+
+TODO: add specific explanation for Windows/Ubuntu and MacOS, this will be added after I clarify everything with Nazar
+
+
 # How to Install
 
 1. Download the latest [release](https://github.com/subspace/subspace-desktop/releases) for your preferred platform.
