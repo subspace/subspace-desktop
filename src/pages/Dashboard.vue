@@ -12,7 +12,6 @@ q-page.q-pl-lg.q-pr-lg.q-pt-md
       .col
         farmedList(
           :expanded="expanded"
-          :farmedTotalEarned="farmedTotalEarned"
           @expand="expand"
         )
   div(v-else)
@@ -24,14 +23,14 @@ q-page.q-pl-lg.q-pr-lg.q-pt-md
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue"
+import { defineComponent, watch } from "vue"
 import { Notify } from "quasar"
 import { globalState as global } from "../lib/global"
 import * as util from "../lib/util"
 import farmedList from "../components/farmedList.vue"
 import netCard from "../components/netCard.vue"
 import plotCard from "../components/plotCard.vue"
-import { emptyClientData, ClientData, FarmedBlock } from "../lib/types"
+import { FarmedBlock } from "../lib/types"
 import { appConfig } from "../lib/appConfig"
 import { useStore } from '../stores/store';
 
@@ -63,21 +62,13 @@ export default defineComponent({
       loading: true,
       unsubscribe: () => null,
       peerInterval: 0,
-      clientData: <ClientData>emptyClientData
-    }
-  },
-  computed: {
-    farmedTotalEarned(): number {
-      if (!this.$client) return 0
-      return this.$client.data.farming.farmed.reduce((agg: number, val: { blockReward: number, feeReward: number }) => {
-        return val.blockReward + val.feeReward + agg
-      }, 0)
     }
   },
   async mounted() {
     const config = await appConfig.read()
     this.plot.plotSizeGB = config.plot.sizeGB
 
+    // TODO: remove client methods, call store methods instead: startNode, startFarming
     if (!this.store.isFirstLoad) {
       // TODO: fetch blocks from storage 
       util.infoLogger("DASHBOARD | starting node")
@@ -92,20 +83,42 @@ export default defineComponent({
         util.errorLogger("DASHBOARD | Farmer start error!")
       }
       util.infoLogger("DASHBOARD | starting block subscription")
-      await this.$client.startSubscription();
+      await this.$client.startSubscription({
+        farmedBlockHandler: this.store.addFarmedBlock,
+        newBlockHandler: this.store.updateBlockNum,
+      });
     }
 
     this.global.status.state = "loading"
     this.global.status.message = this.$t('dashboard.loadingStatus');
 
-    this.clientData = this.$client.data
     this.loading = false
 
     this.fetchPeersCount();// fetch initial peers count value
     this.peerInterval = window.setInterval(this.fetchPeersCount, 30000);
 
-    this.$client.data.farming.events.on("newBlock", this.newBlock)
-    this.$client.data.farming.events.on("farmedBlock", this.farmBlock)
+    // watch for farmed blocks
+    watch(
+      () => this.store.farmedBlocks.length,
+      () => {
+        if (this.store.farmedBlocks.length) {
+          this.farmBlock(this.store.farmedBlocks[0]);
+        }
+      },
+      { immediate: true }
+    )
+
+    // watch for new blocks (synced at block number)
+    watch(
+      () => this.store.syncedAtNum,
+      () => {
+        if (this.network.state === "finished") {
+          this.network.message = this.$t('dashboard.syncedAt', { blockNumber: this.store.syncedAtNum });
+        }
+      },
+      { immediate: true }
+    )
+
     this.global.status.state = "live"
     this.global.status.message = this.$t('dashboard.syncedMsg')
     await this.checkNodeAndNetwork()
@@ -114,9 +127,6 @@ export default defineComponent({
   unmounted() {
     this.unsubscribe()
     clearInterval(this.peerInterval)
-    this.$client.stopSubscription()
-    this.$client.data.farming.events.off("newBlock", this.newBlock)
-    this.$client.data.farming.events.off("farmedBlock", this.farmBlock)
   },
   methods: {
     async fetchPeersCount() {
@@ -150,10 +160,6 @@ export default defineComponent({
 
       this.network.message = this.$t('dashboard.nodeIsSynced', { currentBlock: syncState.currentBlock });
       this.network.state = "finished"
-    },
-    newBlock(blockNumber: number) {
-      if (this.network.state === "finished")
-        this.network.message = this.$t('dashboard.syncedAt', { blockNumber: blockNumber.toLocaleString() });
     },
     farmBlock(block: FarmedBlock) {
       Notify.create({

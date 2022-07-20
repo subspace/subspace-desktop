@@ -217,13 +217,17 @@ export default defineComponent({
     },
     async farmingWrapper(): Promise<void> {
       const config = await appConfig.read()
+      // TODO: remove client methods, call store methods instead: startNode, startFarming
       const farmerStarted = await this.$client.startFarming(this.plotDirectory, config.plot.sizeGB)
       if (!farmerStarted) {
         util.errorLogger("PLOTTING PROGRESS | Farmer start error!")
       }
       util.infoLogger("PLOTTING PROGRESS | farmer started")
       this.plottingData.allocatedGB = config.plot.sizeGB
-      await this.$client.startSubscription();
+      await this.$client.startSubscription({
+        farmedBlockHandler: this.store.addFarmedBlock,
+        newBlockHandler: this.store.updateBlockNum,
+      });
       util.infoLogger("PLOTTING PROGRESS | block subscription started")
       this.syncState = (await this.$client.getSyncState()).toJSON() as unknown as SyncState;
       let isSyncing = await this.$client.isSyncing();

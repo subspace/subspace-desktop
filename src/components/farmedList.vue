@@ -6,10 +6,10 @@ q-card(bordered flat)
         .row.items-center
           .text-h6.text-weight-light {{ $t('dashboard.farmedBlocks') }}:
       .col-auto.q-mr-xl
-        h6 {{ farmedBlocksList?.length }}
+        h6 {{ store.blocksByAddress?.length }}
       .col-auto.q-mr-xl
         .text-weight-light {{ $t('dashboard.totalEarned') }}
-        p {{ farmedTotalEarned }} {{ $t('dashboard.tokenName') }}
+        p {{ store.totalEarned }} {{ $t('dashboard.tokenName') }}
       .col-auto
         .text-weight-light {{ $t('dashboard.rewardAddress') }}
         .reward-address {{ rewardAddress }}
@@ -47,7 +47,7 @@ q-card(bordered flat)
       enter-active-class="animated slideInTop "
       name="list"
     )
-      .bg-white(:key="block.time" v-for="block of farmedBlocksList")
+      .bg-white(:key="block.time" v-for="block of store.blocksByAddress")
         q-separator
         .row.q-pa-xs.q-ml-sm.q-ma-xs
           .col-4
@@ -57,8 +57,7 @@ q-card(bordered flat)
           .col-3
             p.text-weight-light {{ formatDate(block.time) }}
           .col-2
-            // remove hardcoded 
-            p {{ block.blockReward }} testSSC
+            p {{ block.blockReward }} $t('dashboard.tokenName')
 </template>
 
 <script lang="ts">
@@ -66,8 +65,7 @@ import { defineComponent } from "vue"
 import { formatDistanceToNowStrict } from "date-fns"
 import * as process from "process"
 import * as util from "../lib/util"
-import { FarmedBlock } from "../lib/types"
-import { appConfig } from "../lib/appConfig"
+import { useStore } from '../stores/store';
 
 const NETWORK_RPC = process.env.PUBLIC_API_WS || "ws://localhost:9947";
 const appsLink = "https://polkadot.js.org/apps/?rpc=" + NETWORK_RPC + "#/explorer/query/"
@@ -75,29 +73,22 @@ const appsLink = "https://polkadot.js.org/apps/?rpc=" + NETWORK_RPC + "#/explore
 export default defineComponent({
   props: {
     expanded: { type: Boolean, default: false },
-    farmedTotalEarned: { type: Number, default: 0 }
   },
   emits: ["expand"],
+  setup() {
+    const store = useStore();
+    return { store };
+  },
   data() {
     return { 
       util, 
-      rewardAddress: "", 
       appsLink,
     }
   },
   computed: {
-    farmedBlocksList(): FarmedBlock[] {
-      const result = this.$client.data?.farming.farmed.filter((block) => {
-        return block.rewardAddr == this.rewardAddress
-      })
-      return result
-    },
     blocksListStyle(): { [index: string]: string } {
       return this.expanded ? { height: "370px" } : { height: "185px" }
     },
-  },
-  async mounted() {
-    this.rewardAddress = (await appConfig.read()).rewardAddress;
   },
   methods: {
     blockLink(blockNumber: number) {

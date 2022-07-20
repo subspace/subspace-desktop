@@ -3,6 +3,8 @@ import { defineStore } from 'pinia';
 
 import { appConfig } from "../lib/appConfig";
 import * as util from "../lib/util";
+import { FarmedBlock } from '../lib/types';
+import { storeBlocks } from '../lib/blockStorage';
 
 enum Status {
   'idle',
@@ -10,21 +12,36 @@ enum Status {
   'farming'
 }
 
+interface State {
+  status: Status;
+  plotSizeGB: number;
+  plotDir: string;
+  farmedBlocks: FarmedBlock[];
+  peers: number;
+  nodeName: string;
+  syncState: SyncState;
+  rewardAddress: string;
+  isFirstLoad: boolean;
+  syncedAtNum: number;
+}
+
 export const useStore = defineStore('store', {
-  state: () => ({
+  state: (): State => ({
     status: Status.idle,
     plotSizeGB: 1,
     plotDir: '/',
-    farmed: [],
+    farmedBlocks: [],
     peers: 0,
     nodeName: '',
     syncState: {
+      startingBlock: 0,
       currentBlock: 0,
       highestBlock: 0,
     },
     rewardAddress: '',
     // TODO: it is confusing to start with 'false' value, replace with better mechanism
     isFirstLoad: false,
+    syncedAtNum: 0,
   }),
 
   getters: {
@@ -32,6 +49,15 @@ export const useStore = defineStore('store', {
       return this.nodeName.length > 20
         ? `${this.nodeName.slice(0, 20)}...`
         : this.nodeName;
+    },
+    blocksByAddress(state): FarmedBlock[] {
+      return this.farmedBlocks
+        .filter(({ rewardAddr }: FarmedBlock) => rewardAddr === state.rewardAddress)
+    },
+    // TODO: include voting rewards
+    totalEarned(): number {
+      return this.blocksByAddress
+        .reduce((agg: number, { blockReward, feeReward }) => blockReward + feeReward + agg, 0)
     }
   },
 
@@ -60,9 +86,9 @@ export const useStore = defineStore('store', {
       this.setNodeName(nodeName);
 
       await appConfig.update({
-        plot: { 
-          location: this.plotDir, 
-          sizeGB: this.plotSizeGB 
+        plot: {
+          location: this.plotDir,
+          sizeGB: this.plotSizeGB,
         },
         nodeName,
       });
@@ -75,6 +101,13 @@ export const useStore = defineStore('store', {
     },
     setFirstLoad() {
       this.isFirstLoad = true;
+    },
+    addFarmedBlock(block: FarmedBlock) {
+      this.farmedBlocks = [block, ...this.farmedBlocks];
+      storeBlocks(this.farmedBlocks);
+    },
+    updateBlockNum(blockNum: number) {
+      this.syncedAtNum = blockNum;
     }
   }
 });

@@ -3,13 +3,10 @@ import type { Vec } from "@polkadot/types/codec"
 import { mnemonicGenerate, cryptoWaitReady } from "@polkadot/util-crypto"
 import * as event from "@tauri-apps/api/event"
 import { invoke } from "@tauri-apps/api/tauri"
-import { reactive } from "vue"
 import * as process from "process"
 import * as util from "../lib/util"
 import { appConfig } from "./appConfig"
-import { getStoredBlocks, storeBlocks } from "./blockStorage"
 import {
-  emptyClientData,
   FarmedBlock,
   SubPreDigest
 } from "../lib/types"
@@ -20,7 +17,6 @@ const tauri = { event, invoke }
 const SUNIT = 1000000000000000000n
 
 export class Client {
-  protected farmed: FarmedBlock[] = []
   protected clearTauriDestroy: event.UnlistenFn = () => null;
   protected unsubscribe: event.UnlistenFn = () => null;
 
@@ -30,7 +26,6 @@ export class Client {
     this.api = api;
   }
 
-  data = reactive(emptyClientData)
   async getPeersCount(): Promise<number> {
     const peers = await this.api.rpc.system.peers();
     return peers.length;
@@ -55,7 +50,11 @@ export class Client {
     return blockReward;
   }
 
-  async startSubscription(): Promise<void> {
+  // TODO: handlers param is temporary - create better solution
+  async startSubscription(handlers: {
+    farmedBlockHandler: (block: FarmedBlock) => void;
+    newBlockHandler: (blockNum: number) => void;
+  }): Promise<void> {
     const rewardAddress: string = (await appConfig.read()).rewardAddress;
 
     this.unsubscribe = await this.api.rpc.chain.subscribeNewHeads(
@@ -81,11 +80,9 @@ export class Client {
             // TODO: check if necessary to store address here since we only process blocks farmed by user
             rewardAddr: rewardAddress.toString(),
           }
-          this.data.farming.farmed = [block, ...this.data.farming.farmed];
-          storeBlocks(this.data.farming.farmed)
-          this.data.farming.events.emit("farmedBlock", block)
+          handlers.farmedBlockHandler(block);
         }
-        this.data.farming.events.emit("newBlock", blockNum)
+        handlers.newBlockHandler(blockNum);
       }
     )
 
@@ -93,10 +90,7 @@ export class Client {
     window.addEventListener("unload", this.stopSubscription)
     this.clearTauriDestroy = await tauri.event.once(
       "tauri://destroyed",
-      () => {
-        console.log("Destroyed event!")
-        storeBlocks(this.data.farming.farmed)
-      }
+      () => console.log("Destroyed event!")
     )
   }
 
@@ -106,7 +100,6 @@ export class Client {
     this.api.disconnect()
     try {
       this.clearTauriDestroy()
-      storeBlocks(this.data.farming.farmed)
       window.removeEventListener("unload", this.stopSubscription)
     } catch (error) {
       util.errorLogger(error)
@@ -134,11 +127,6 @@ export class Client {
     // TODO: workaround in case node takes some time to fully start.
     await new Promise((resolve) => setTimeout(resolve, 7000))
     await this.connectApi()
-  }
-
-  private loadStoredBlocks(): void {
-    this.farmed = getStoredBlocks()
-    this.data.farming.farmed = this.farmed
   }
 
   public async createRewardAddress(): Promise<{ rewardAddress: string, mnemonic: string }> {

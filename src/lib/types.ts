@@ -1,4 +1,4 @@
-import mitt, { Emitter } from "mitt"
+import { Emitter } from "mitt"
 import { ApexOptions } from "apexcharts"
 import type { AccountId32 } from "@polkadot/types/interfaces"
 import type { Struct, u64 } from "@polkadot/types"
@@ -62,18 +62,6 @@ export interface ClientFarming {
   status: "active" | "paused" | string
   farmed: FarmedBlock[]
   events: Emitter<any>
-}
-
-export interface ClientData {
-  plot: ClientPlot
-  network: ClientNetwork
-  farming: ClientFarming
-}
-
-export const emptyClientData: ClientData = {
-  plot: { details: {}, plotFile: "", plotSizeGB: 0, status: "" },
-  farming: { farmed: [], status: "", events: mitt() },
-  network: { details: {}, peers: [], status: "" }
 }
 
 export const chartOptions: ApexOptions = {
