@@ -23,6 +23,8 @@ export const useStore = defineStore('store', {
       highestBlock: 0,
     },
     rewardAddress: '',
+    // TODO: it is confusing to start with 'false' value, replace with better mechanism
+    isFirstLoad: false,
   }),
 
   getters: {
@@ -70,6 +72,9 @@ export const useStore = defineStore('store', {
     async setRewardAddress(address: string) {
       this.rewardAddress = address;
       await appConfig.update({ rewardAddress: address });
+    },
+    setFirstLoad() {
+      this.isFirstLoad = true;
     }
   }
 });

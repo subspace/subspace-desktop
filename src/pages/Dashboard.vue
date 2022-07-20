@@ -33,9 +33,14 @@ import netCard from "../components/netCard.vue"
 import plotCard from "../components/plotCard.vue"
 import { emptyClientData, ClientData, FarmedBlock } from "../lib/types"
 import { appConfig } from "../lib/appConfig"
+import { useStore } from '../stores/store';
 
 export default defineComponent({
   components: { farmedList, netCard, plotCard },
+  setup() {
+    const store = useStore();
+    return { store };
+  },
   data() {
     return {
       network: {
@@ -73,7 +78,8 @@ export default defineComponent({
     const config = await appConfig.read()
     this.plot.plotSizeGB = config.plot.sizeGB
 
-    if (this.$client.isFirstLoad() === false) {
+    if (!this.store.isFirstLoad) {
+      // TODO: fetch blocks from storage 
       util.infoLogger("DASHBOARD | starting node")
       if (config.nodeName !== "") {
         await this.$client.startNode(config.plot.location, config.nodeName)

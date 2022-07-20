@@ -20,7 +20,6 @@ const tauri = { event, invoke }
 const SUNIT = 1000000000000000000n
 
 export class Client {
-  protected firstLoad = false
   protected farmed: FarmedBlock[] = []
   protected clearTauriDestroy: event.UnlistenFn = () => null;
   protected unsubscribe: event.UnlistenFn = () => null;
@@ -114,15 +113,6 @@ export class Client {
     }
   }
 
-  /* To be called ONLY from plotting progress */
-  public setFirstLoad(): void {
-    this.firstLoad = true
-  }
-  /* To be called from dashboard, if isFirstLoad dashboard will not start NODE or FARMER as plottingProgress page already done this and also started block subscriptions. */
-  public isFirstLoad(): boolean {
-    return this.firstLoad
-  }
-
   public async connectApi(): Promise<void> {
     if (!this.api.isConnected) {
       await this.api.connect()
@@ -141,9 +131,6 @@ export class Client {
 
   public async startNode(path: string, nodeName: string): Promise<void> {
     await tauri.invoke("start_node", { path, nodeName })
-    if (!this.firstLoad) {
-      this.loadStoredBlocks()
-    }
     // TODO: workaround in case node takes some time to fully start.
     await new Promise((resolve) => setTimeout(resolve, 7000))
     await this.connectApi()

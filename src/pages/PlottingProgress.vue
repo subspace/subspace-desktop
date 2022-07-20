@@ -124,10 +124,15 @@ import * as util from "../lib/util"
 import introModal from "../components/introModal.vue"
 import { appConfig } from "../lib/appConfig"
 import { SyncState } from "../lib/types";
+import { useStore } from '../stores/store';
 
 let farmerTimer: number
 
 export default defineComponent({
+  setup() {
+    const store = useStore();
+    return { store };
+  },
   data() {
     return {
       elapsedms: 0,
@@ -191,7 +196,7 @@ export default defineComponent({
   },
   methods: {
     async getPlotConfig() {
-      this.$client.setFirstLoad()
+      this.store.setFirstLoad()
       const config = await appConfig.read()
       this.plottingData.remainingGB = config.plot.sizeGB
       this.plottingData.allocatedGB = config.plot.sizeGB
