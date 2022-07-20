@@ -9,7 +9,7 @@ edition = "2021"
 
 [build-dependencies]
 substrate-build-script-utils = { version = "3.0.0", git = "https://github.com/subspace/substrate", rev = "b49d8ee54f4bd6e4b5b48f45d08f75705fad95b4" }
-tauri-build = { version = "1.0.0-rc.9", features = [] }
+tauri-build = { version = "1.0.4", features = [] }
 
 [dependencies]
 anyhow = "1.0.44"
@@ -49,8 +49,8 @@ openssl = { version = "0.10.40", features = ["vendored"] }
 winreg = "0.10.1"
 
 [dependencies.tauri]
-features = ["clipboard-all", "dialog-all", "fs-all", "global-shortcut-all", "gtk-tray", "notification-all", "os-all", "path-all", "process-exit", "process-relaunch", "shell-all", "system-tray", "updater", "window-all"]
-version = "1.0.0-rc.11"
+features = ["clipboard-all", "dialog-all", "fs-all", "global-shortcut-all", "notification-all", "os-all", "path-all", "process-exit", "process-relaunch", "shell-all", "system-tray", "updater", "window-all"]
+version = "1.0.4"
 
 [features]
 default = [ "custom-protocol" ]
@@ -60,8 +60,7 @@ opencl = ["subspace-farmer/opencl"]
 [profile.dev]
 opt-level = 3
 
-[profile.production]
-inherits = "release"
+[profile.release]
 lto = "fat"
 codegen-units = 1
 
