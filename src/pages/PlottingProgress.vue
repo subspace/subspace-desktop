@@ -14,7 +14,7 @@ q-page.q-pa-lg.q-mr-lg.q-ml-lg
             input-class="plottingInput"
             outlined
             readonly
-            v-model="plotDirectory"
+            v-model="store.plotDir"
           )
       .row.items-center.q-gutter-md
         .col.relative-position
@@ -144,7 +144,6 @@ export default defineComponent({
         status: this.$t('plottingProgress.fetchingPlot'),
       },
       plotFinished: false,
-      plotDirectory: "",
       syncState: {
         currentBlock: 0,
         highestBlock: 0,
@@ -200,12 +199,11 @@ export default defineComponent({
       const config = await appConfig.read()
       this.plottingData.remainingGB = config.plot.sizeGB
       this.plottingData.allocatedGB = config.plot.sizeGB
-      this.plotDirectory = config.plot.location
     },
     async waitNode() {
-      const { nodeName } = this.store;
+      const { nodeName, plotDir } = this.store;
       if (nodeName !== "") {
-        await this.$client.startNode(this.plotDirectory, nodeName)
+        await this.$client.startNode(plotDir, nodeName)
       } else {
         util.errorLogger("PLOTTING PROGRESS | node name was empty when tried to start node")
       }
@@ -216,9 +214,10 @@ export default defineComponent({
       clearInterval(farmerTimer)
     },
     async farmingWrapper(): Promise<void> {
-      const config = await appConfig.read()
+      const config = await appConfig.read();
+      const { plotDir } = this.store;
       // TODO: remove client methods, call store methods instead: startNode, startFarming
-      const farmerStarted = await this.$client.startFarming(this.plotDirectory, config.plot.sizeGB)
+      const farmerStarted = await this.$client.startFarming(plotDir, config.plot.sizeGB)
       if (!farmerStarted) {
         util.errorLogger("PLOTTING PROGRESS | Farmer start error!")
       }
