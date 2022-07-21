@@ -121,7 +121,6 @@ import * as fs from "@tauri-apps/api/fs"
 import * as util from "../lib/util"
 import { chartOptions, ChartDataType, StatsType } from "../lib/types"
 import * as native from "../lib/native"
-import { appConfig } from "../lib/appConfig"
 import { appData, appDataDialog } from "../lib/appData"
 import mnemonicModal from "../components/mnemonicModal.vue"
 import { useStore } from '../stores/store';
@@ -129,6 +128,7 @@ import { useStore } from '../stores/store';
 const tauri = { path, fs }
 
 // TODO: implement error handling - Implement error pages for potential worst case scenarios #253 
+// TODO: consider moving client, tauri and native methods elsewhere - use store methods instead
 export default defineComponent({
   setup() {
     const store = useStore();
@@ -140,7 +140,6 @@ export default defineComponent({
       validPath: true,
       driveStats: <native.DriveStats>{ freeBytes: 0, totalBytes: 0 },
       chartOptions,
-      rewardAddress: ""
     }
   },
   computed: {
@@ -281,12 +280,11 @@ export default defineComponent({
       await this.updateDriveStats()
     },
     async checkIdentity() {
-      const config = await appConfig.read()
-      if (config.rewardAddress === "") {
+      if (this.store.rewardAddress === "") {
         util.infoLogger("SETUP PLOT | reward address was empty, creating a new one")
         try {
           const { rewardAddress, mnemonic }  = await this.$client.createRewardAddress();
-          this.rewardAddress = rewardAddress;
+          this.store.setRewardAddress(rewardAddress);
           await this.viewMnemonic(mnemonic);
         } catch (error) {
           util.errorLogger(error);
@@ -299,7 +297,7 @@ export default defineComponent({
       const modal = await util.showModal(mnemonicModal, { mnemonic });
       return new Promise((resolve) => {
         modal?.onDismiss(async () => {
-          await this.store.setRewardAddress(this.rewardAddress);
+          await this.store.confirmRewardAddress();
           resolve()
         })
       })

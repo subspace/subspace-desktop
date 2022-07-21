@@ -95,9 +95,12 @@ export const useStore = defineStore('store', {
 
       this.setStatus(Status.syncing);
     },
-    async setRewardAddress(address: string) {
+    setRewardAddress(address: string) {
       this.rewardAddress = address;
-      await appConfig.update({ rewardAddress: address });
+    },
+    // we need a separate method, because we store address to config only after user confirmed (modal in SetupPlot.vue)
+    async confirmRewardAddress() {
+      await appConfig.update({ rewardAddress: this.rewardAddress });
     },
     setFirstLoad() {
       this.isFirstLoad = true;

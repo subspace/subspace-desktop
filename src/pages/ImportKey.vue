@@ -9,7 +9,7 @@ q-page(padding)
       outlined
       dense
       class="reward-address"
-      v-model="rewardAddress"
+      v-model="store.rewardAddress"
       input-class="text-center"
       :rules="[val => isValidSubstrateAddress(val) || $t('importKey.addressErrorMsg')]"
     )
@@ -26,14 +26,14 @@ q-page(padding)
     q-space
     .col-auto
       q-btn(
-        :disable="!isValidSubstrateAddress(rewardAddress)"
+        :disable="!isValidSubstrateAddress(store.rewardAddress)"
         :label="$t('importKey.continue')"
         @click="importKey()"
         icon-right="arrow_forward"
         outline
         size="lg"
       )
-      q-tooltip.q-pa-md(v-if="!isValidSubstrateAddress(rewardAddress)")
+      q-tooltip.q-pa-md(v-if="!isValidSubstrateAddress(store.rewardAddress)")
         p.q-mb-lg {{ $t('importKey.tooltip') }}
 </template>
 
@@ -47,14 +47,7 @@ import { useStore } from '../stores/store';
 export default defineComponent({
   setup() {
     const store = useStore();
-    return { 
-      setRewardAddress: store.setRewardAddress 
-    };
-  },
-  data() {
-    return {
-      rewardAddress: "",
-    }
+    return { store };
   },
   methods: {
     isValidSubstrateAddress(val: string): boolean {
@@ -66,7 +59,7 @@ export default defineComponent({
       }
     },
     async importKey() {
-      await this.setRewardAddress(this.rewardAddress);
+      await this.store.confirmRewardAddress();
       this.$router.replace({ name: "setupPlot" })
     },
   }

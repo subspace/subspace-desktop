@@ -34,6 +34,7 @@ import { appConfig } from "../lib/appConfig"
 import disclaimer from "../components/disclaimer.vue"
 import { useStore } from '../stores/store';
 
+// TODO: consider removing appConfig from component and call store methods instead
 export default defineComponent({
   setup() {
     const store = useStore();
