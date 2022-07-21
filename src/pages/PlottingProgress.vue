@@ -122,7 +122,6 @@ q-page.q-pa-lg.q-mr-lg.q-ml-lg
 import { defineComponent } from "vue"
 import * as util from "../lib/util"
 import introModal from "../components/introModal.vue"
-import { appConfig } from "../lib/appConfig"
 import { SyncState } from "../lib/types";
 import { useStore } from '../stores/store';
 
@@ -196,9 +195,8 @@ export default defineComponent({
   methods: {
     async getPlotConfig() {
       this.store.setFirstLoad()
-      const config = await appConfig.read()
-      this.plottingData.remainingGB = config.plot.sizeGB
-      this.plottingData.allocatedGB = config.plot.sizeGB
+      this.plottingData.remainingGB = this.store.plotSizeGB;
+      this.plottingData.allocatedGB = this.store.plotSizeGB;
     },
     async waitNode() {
       const { nodeName, plotDir } = this.store;
@@ -214,15 +212,14 @@ export default defineComponent({
       clearInterval(farmerTimer)
     },
     async farmingWrapper(): Promise<void> {
-      const config = await appConfig.read();
-      const { plotDir } = this.store;
+      const { plotDir, plotSizeGB } = this.store;
       // TODO: remove client methods, call store methods instead: startNode, startFarming
-      const farmerStarted = await this.$client.startFarming(plotDir, config.plot.sizeGB)
+      const farmerStarted = await this.$client.startFarming(plotDir, plotSizeGB);
       if (!farmerStarted) {
         util.errorLogger("PLOTTING PROGRESS | Farmer start error!")
       }
       util.infoLogger("PLOTTING PROGRESS | farmer started")
-      this.plottingData.allocatedGB = config.plot.sizeGB
+      this.plottingData.allocatedGB = plotSizeGB;
       await this.$client.startSubscription({
         farmedBlockHandler: this.store.addFarmedBlock,
         newBlockHandler: this.store.updateBlockNum,
@@ -242,7 +239,7 @@ export default defineComponent({
     startTimers() {
       farmerTimer = window.setInterval(() => {
         this.elapsedms += 1000;
-        const ms = (this.elapsedms * this.syncState.highestBlock) / this.syncState.currentBlock - this.elapsedms;
+        const ms = (this.elapsedms * this.syncState.highestBlock) / (this.syncState.currentBlock || 1) - this.elapsedms;
         this.remainingms = util.toFixed(ms, 2);
       }, 1000)
     },
