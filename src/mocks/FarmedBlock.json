@@ -1,0 +1,9 @@
+{
+  "blockNum": 1,
+  "time": 1658321208655,
+  "transactions": 3,
+  "blockReward": 100,
+  "feeReward": 2,
+  "id": "random block id",
+  "rewardAddr": "my address"
+}
