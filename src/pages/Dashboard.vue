@@ -25,7 +25,6 @@ q-page.q-pl-lg.q-pr-lg.q-pt-md
 <script lang="ts">
 import { defineComponent, watch } from "vue"
 import { Notify } from "quasar"
-import { globalState as global } from "../lib/global"
 import * as util from "../lib/util"
 import farmedList from "../components/farmedList.vue"
 import netCard from "../components/netCard.vue"
@@ -51,11 +50,6 @@ export default defineComponent({
         state: "starting",
         message: this.$t('dashboard.initializing'),
         plotSizeGB: 0
-      },
-      global: global.data,
-      globalState: {
-        state: "starting",
-        message: this.$t('dashboard.initializing')
       },
       expanded: false,
       util,
@@ -90,9 +84,6 @@ export default defineComponent({
       });
     }
 
-    this.global.status.state = "loading"
-    this.global.status.message = this.$t('dashboard.loadingStatus');
-
     this.loading = false
 
     this.fetchPeersCount();// fetch initial peers count value
@@ -120,8 +111,6 @@ export default defineComponent({
       { immediate: true }
     )
 
-    this.global.status.state = "live"
-    this.global.status.message = this.$t('dashboard.syncedMsg')
     await this.checkNodeAndNetwork()
     await this.checkFarmerAndPlot()
   },

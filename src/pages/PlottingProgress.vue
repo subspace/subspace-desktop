@@ -139,7 +139,6 @@ export default defineComponent({
       plottingData: {
         finishedGB: 0,
         remainingGB: 0,
-        allocatedGB: 0,
         status: this.$t('plottingProgress.fetchingPlot'),
       },
       plotFinished: false,
@@ -174,44 +173,36 @@ export default defineComponent({
         this.plottingData.finishedGB.toFixed(2)
       )
       this.plottingData.remainingGB = parseFloat(
-        (this.plottingData.allocatedGB - val).toFixed(2)
+        (this.store.plotSizeGB - val).toFixed(2)
       )
-      if (this.plottingData.finishedGB >= this.plottingData.allocatedGB)
-        this.plottingData.finishedGB = this.plottingData.allocatedGB
+      if (this.plottingData.finishedGB >= this.store.plotSizeGB) {
+        this.plottingData.finishedGB = this.store.plotSizeGB
+      }
     },
   },
   async mounted() {
     util.infoLogger("PLOTTING PROGRESS | getting plot config")
-    await this.getPlotConfig()
+    this.store.setFirstLoad()
+    this.plottingData.remainingGB = this.store.plotSizeGB;
     util.infoLogger("PLOTTING PROGRESS | starting node")
-    await this.waitNode()
+    await this.startNode();
     this.startTimers()
     util.infoLogger("PLOTTING PROGRESS | starting plotting")
-    this.startPlotting()
+    await this.startSyncing();
   },
   unmounted() {
     if (farmerTimer) clearInterval(farmerTimer)
   },
   methods: {
-    async getPlotConfig() {
-      this.store.setFirstLoad()
-      this.plottingData.remainingGB = this.store.plotSizeGB;
-      this.plottingData.allocatedGB = this.store.plotSizeGB;
-    },
-    async waitNode() {
+    async startNode() {
       const { nodeName, plotDir } = this.store;
-      if (nodeName !== "") {
+      if (nodeName && plotDir) {
         await this.$client.startNode(plotDir, nodeName)
       } else {
-        util.errorLogger("PLOTTING PROGRESS | node name was empty when tried to start node")
+        util.errorLogger("PLOTTING PROGRESS | node name and plot directory are required to start node");
       }
-
     },
-    pausePlotting() {
-      this.plotFinished = true
-      clearInterval(farmerTimer)
-    },
-    async farmingWrapper(): Promise<void> {
+    async startSyncing(): Promise<void> {
       const { plotDir, plotSizeGB } = this.store;
       // TODO: remove client methods, call store methods instead: startNode, startFarming
       const farmerStarted = await this.$client.startFarming(plotDir, plotSizeGB);
@@ -219,7 +210,6 @@ export default defineComponent({
         util.errorLogger("PLOTTING PROGRESS | Farmer start error!")
       }
       util.infoLogger("PLOTTING PROGRESS | farmer started")
-      this.plottingData.allocatedGB = plotSizeGB;
       await this.$client.startSubscription({
         farmedBlockHandler: this.store.addFarmedBlock,
         newBlockHandler: this.store.updateBlockNum,
@@ -232,9 +222,12 @@ export default defineComponent({
         await new Promise((resolve) => setTimeout(resolve, 3000))
         this.syncState = (await this.$client.getSyncState()).toJSON() as unknown as SyncState;
         this.plottingData.status = `Syncing ${this.syncState.currentBlock} of ${this.syncState.highestBlock} blocks`
-        this.plottingData.finishedGB = (this.syncState.currentBlock * this.plottingData.allocatedGB) / this.syncState.highestBlock;
+        this.plottingData.finishedGB = (this.syncState.currentBlock * this.store.plotSizeGB) / this.syncState.highestBlock;
         isSyncing = await this.$client.isSyncing();
       } while (isSyncing);
+
+      this.plotFinished = true
+      clearInterval(farmerTimer)
     },
     startTimers() {
       farmerTimer = window.setInterval(() => {
@@ -242,10 +235,6 @@ export default defineComponent({
         const ms = (this.elapsedms * this.syncState.highestBlock) / (this.syncState.currentBlock || 1) - this.elapsedms;
         this.remainingms = util.toFixed(ms, 2);
       }, 1000)
-    },
-    async startPlotting() {
-      await this.farmingWrapper()
-      this.pausePlotting()
     },
     async viewIntro() {
       await util.showModal(introModal)
