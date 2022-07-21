@@ -260,10 +260,6 @@ export default defineComponent({
       }
     },
     async startPlotting() {
-      // TODO: clarify:
-      // if (this.plotDirectory.charAt(this.plotDirectory.length - 1) == "/")
-      //   this.plotDirectory.slice(-1)
-
       await appData.createCustomDataDir(this.store.plotDir)
       util.infoLogger("SETUP PLOT | custom directory created")
       await this.checkIdentity();

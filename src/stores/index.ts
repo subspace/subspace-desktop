@@ -17,7 +17,7 @@ export default store(async () => {
   const api = createApi(LOCAL_RPC);
   const client = new Client(api);
 
-  pinia.use(() => { client });
+  pinia.use(() => ({ client }));
 
   return pinia
 })

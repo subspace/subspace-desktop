@@ -28,17 +28,17 @@ interface State {
 export const useStore = defineStore('store', {
   state: (): State => ({
     status: Status.idle,
-    plotSizeGB: 1,
-    plotDir: '/',
-    farmedBlocks: [],
+    plotSizeGB: 1, // TODO: read from config
+    plotDir: '/', // TODO: read from config
+    farmedBlocks: [], // TODO: read from local storage
     peers: 0,
-    nodeName: '',
+    nodeName: '', // TODO: read from config
     syncState: {
       startingBlock: 0,
       currentBlock: 0,
       highestBlock: 0,
     },
-    rewardAddress: '',
+    rewardAddress: '', // TODO: read from config
     // TODO: it is confusing to start with 'false' value, replace with better mechanism
     isFirstLoad: false,
     syncedAtNum: 0,

@@ -39,6 +39,7 @@ export default defineComponent({
       this.checkDev()
       if (await appConfig.validate()) {
         util.infoLogger("INDEX | NOT First Time RUN.")
+        // TODO: path store to get values from config
         this.dashboard()
         return
       }
