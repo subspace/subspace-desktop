@@ -4,7 +4,7 @@ import { defineStore } from 'pinia';
 import { appConfig } from "../lib/appConfig";
 import * as util from "../lib/util";
 import { FarmedBlock } from '../lib/types';
-import { storeBlocks } from '../lib/blockStorage';
+import { storeBlocks, getStoredBlocks } from '../lib/blockStorage';
 
 enum Status {
   'idle',
@@ -28,17 +28,17 @@ interface State {
 export const useStore = defineStore('store', {
   state: (): State => ({
     status: Status.idle,
-    plotSizeGB: 1, // TODO: read from config
-    plotDir: '/', // TODO: read from config
-    farmedBlocks: [], // TODO: read from local storage
+    plotSizeGB: 1,
+    plotDir: '/',
+    farmedBlocks: [],
     peers: 0,
-    nodeName: '', // TODO: read from config
+    nodeName: '',
     syncState: {
       startingBlock: 0,
       currentBlock: 0,
       highestBlock: 0,
     },
-    rewardAddress: '', // TODO: read from config
+    rewardAddress: '',
     // TODO: it is confusing to start with 'false' value, replace with better mechanism
     isFirstLoad: false,
     syncedAtNum: 0,
@@ -108,6 +108,14 @@ export const useStore = defineStore('store', {
     },
     updateBlockNum(blockNum: number) {
       this.syncedAtNum = blockNum;
+    },
+    async updateFromConfig() {
+      const config = await appConfig.read();
+      this.plotSizeGB = config.plot.sizeGB;
+      this.plotDir = config.plot.location;
+      this.nodeName = config.nodeName;
+      this.rewardAddress = config.rewardAddress;
+      this.farmedBlocks = getStoredBlocks();
     }
   }
 });

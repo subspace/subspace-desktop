@@ -32,15 +32,20 @@ import { Notify } from "quasar"
 import * as util from "../lib/util"
 import { appConfig } from "../lib/appConfig"
 import disclaimer from "../components/disclaimer.vue"
+import { useStore } from '../stores/store';
 
 export default defineComponent({
+  setup() {
+    const store = useStore();
+    return { store };
+  },
   async mounted() {
     try {
       this.checkDev()
       if (await appConfig.validate()) {
         util.infoLogger("INDEX | NOT First Time RUN.")
-        // TODO: path store to get values from config
-        this.dashboard()
+        await this.store.updateFromConfig();
+        this.dashboard();
         return
       }
       util.infoLogger("validate failed, we should start from scratch")

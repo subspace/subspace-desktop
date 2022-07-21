@@ -299,9 +299,7 @@ export default defineComponent({
       const modal = await util.showModal(mnemonicModal, { mnemonic });
       return new Promise((resolve) => {
         modal?.onDismiss(async () => {
-          await appConfig.update({
-            rewardAddress: this.rewardAddress
-          })
+          await this.store.setRewardAddress(this.rewardAddress);
           resolve()
         })
       })

@@ -12,7 +12,7 @@ q-card(bordered flat)
         p {{ store.totalEarned }} {{ $t('dashboard.tokenName') }}
       .col-auto
         .text-weight-light {{ $t('dashboard.rewardAddress') }}
-        .reward-address {{ rewardAddress }}
+        .reward-address {{ store.rewardAddress }}
       q-space
       .col.col-auto
         .row.justify-center
