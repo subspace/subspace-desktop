@@ -203,7 +203,7 @@ export default defineComponent({
       this.plotDirectory = config.plot.location
     },
     async waitNode() {
-      const nodeName = (await appConfig.read()).nodeName
+      const { nodeName } = this.store;
       if (nodeName !== "") {
         await this.$client.startNode(this.plotDirectory, nodeName)
       } else {

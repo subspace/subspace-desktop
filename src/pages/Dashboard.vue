@@ -71,9 +71,10 @@ export default defineComponent({
     // TODO: remove client methods, call store methods instead: startNode, startFarming
     if (!this.store.isFirstLoad) {
       // TODO: fetch blocks from storage 
-      util.infoLogger("DASHBOARD | starting node")
-      if (config.nodeName !== "") {
-        await this.$client.startNode(config.plot.location, config.nodeName)
+      util.infoLogger("DASHBOARD | starting node");
+      const { nodeName } = this.store;
+      if (nodeName !== "") {
+        await this.$client.startNode(config.plot.location, nodeName)
       } else {
         util.errorLogger("DASHBOARD | node name was empty when tried to start node")
       }
