@@ -6,13 +6,13 @@ q-card(bordered flat)
       h6.text-weight-light {{ $t('dashboard.network') }}
     q-separator.q-mt-xs
     .row.items-center.q-mt-sm
-      .col-auto.q-mr-md(v-if="network.state == 'finished'")
+      .col-auto.q-mr-md(v-if="store.network.state == 'finished'")
         q-icon(color="green" name="done" size="40px")
-      .col-auto.q-mr-md(v-if="network.state == 'verifying'")
+      .col-auto.q-mr-md(v-if="store.network.state == 'verifying'")
         q-spinner-orbit(color="grey" name="done" size="40px")
       .col
         .text-weight-light Status:
-        p {{ network.message }}
+        p {{ store.network.message }}
     .row.items-center.q-mt-sm
       .col
         .row.items-center
@@ -20,7 +20,7 @@ q-card(bordered flat)
             q-icon(color="black" name="group" size="40px")
           .col
             .text-weight-light Peers:
-            p {{ network.peers }}
+            p {{ store.network.peers }}
     //-   .col
     //-     .row.items-center
     //-       .col-auto.q-mr-md
@@ -33,10 +33,12 @@ q-card(bordered flat)
 <script lang="ts" >
 import { defineComponent } from "vue"
 import * as util from "../lib/util"
+import { useStore } from '../stores/store';
 
 export default defineComponent({
-  props: {
-    network: { type: Object, required: true }
+  setup() {
+    const store = useStore();
+    return { store };
   },
   data() {
     return { util }

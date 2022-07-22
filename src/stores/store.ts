@@ -12,17 +12,23 @@ enum Status {
   'farming'
 }
 
+interface Network {
+  peers: number;
+  syncedAtNum: number;
+  state: string;
+  message: string;
+}
+
 interface State {
   status: Status;
   plotSizeGB: number;
   plotDir: string;
   farmedBlocks: FarmedBlock[];
-  peers: number;
   nodeName: string;
   syncState: SyncState;
   rewardAddress: string;
   isFirstLoad: boolean;
-  syncedAtNum: number;
+  network: Network;
 }
 
 export const useStore = defineStore('store', {
@@ -31,17 +37,23 @@ export const useStore = defineStore('store', {
     plotSizeGB: 1,
     plotDir: '/',
     farmedBlocks: [],
-    peers: 0,
     nodeName: '',
     syncState: {
       startingBlock: 0,
       currentBlock: 0,
       highestBlock: 0,
     },
+    // TODO: consider creating separate store for Network
+    network: {
+      syncedAtNum: 0,
+      peers: 0,
+      state: 'starting',
+      // TODO: set int string
+      message: 'dashboard.initializing', // this.$t('dashboard.initializing')
+    },
     rewardAddress: '',
     // TODO: it is confusing to start with 'false' value, replace with better mechanism
     isFirstLoad: false,
-    syncedAtNum: 0,
   }),
 
   getters: {
@@ -76,7 +88,7 @@ export const useStore = defineStore('store', {
       this.syncState = state;
     },
     setPeers(peers: number) {
-      this.peers = peers;
+      this.network.peers = peers;
     },
     setStatus(status: Status) {
       this.status = status;
@@ -110,7 +122,7 @@ export const useStore = defineStore('store', {
       storeBlocks(this.farmedBlocks);
     },
     updateBlockNum(blockNum: number) {
-      this.syncedAtNum = blockNum;
+      this.network.syncedAtNum = blockNum;
     },
     async updateFromConfig() {
       const config = await appConfig.read();
@@ -119,6 +131,12 @@ export const useStore = defineStore('store', {
       this.nodeName = config.nodeName;
       this.rewardAddress = config.rewardAddress;
       this.farmedBlocks = getStoredBlocks();
-    }
+    },
+    setNetworkState (state: string) {
+      this.network.state = state;
+    },
+    setNetworkMessage (message: string) {
+      this.network.message = message;
+    },
   }
 });
