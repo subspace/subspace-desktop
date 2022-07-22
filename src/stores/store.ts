@@ -97,7 +97,31 @@ export const useStore = defineStore('store', {
     },
     plottingRemaining(): number {
       return parseFloat((this.plotSizeGB - this.plotting.finishedGB).toFixed(2))
-    }
+    },
+    // returned object is consumed by $t() from vue-i18n
+    plottingStatus(): { string: string, values: Record<string, number> } {
+      const { currentBlock, highestBlock } = this.syncState;
+      return {
+        string: this.plotting.status,
+        values: { 
+          currentBlock, 
+          highestBlock, 
+        }
+      }
+    },
+    // returned object is consumed by $t() from vue-i18n
+    networkMessage(): { string: string, values: Record<string, number> } {
+      const { currentBlock, highestBlock } = this.syncState;
+      const { message, syncedAtNum } = this.network;
+      return {
+        string: message,
+        values: { 
+          currentBlock, 
+          highestBlock, 
+          syncedAt: syncedAtNum,
+        }
+      }
+    },
   },
 
   actions: {
@@ -178,6 +202,47 @@ export const useStore = defineStore('store', {
         // TODO: create error state and update here
         util.errorLogger("NODE START | node name and plot directory are required to start node");
       }
+    },
+    // TODO: find better way to provide client
+    async startFarmer(client: Client) {
+      this.setStatus('syncing');
+      this.setNetworkState('verifying');
+      this.setPlotMessage('dashboard.verifyingPlot');
+      this.setNetworkMessage('dashboard.verifyingNet');
+
+      const farmerStarted = await client.startFarming(this.plotDir, this.plotSizeGB);
+      if (!farmerStarted) {
+        util.errorLogger("PLOTTING PROGRESS | Farmer start error!")
+      }
+      util.infoLogger("PLOTTING PROGRESS | farmer started")
+      
+      const syncState = (await client.getSyncState()).toJSON() as unknown as SyncState;
+      this.setSyncState(syncState);
+      let isSyncing = await client.isSyncing();
+
+      do {
+        await new Promise((resolve) => setTimeout(resolve, 3000))
+        const syncState = (await client.getSyncState()).toJSON() as unknown as SyncState;
+        this.setSyncState(syncState);
+        this.setPlotMessage('dashboard.plotActive');
+        this.setNetworkMessage('dashboard.syncingMsg');
+        this.setPlottingStatus('dashboard.syncingMsg');
+        this.setPlottingFinished((this.syncState.currentBlock * this.plotSizeGB) / this.syncState.highestBlock);
+        isSyncing = await client.isSyncing();
+      } while (isSyncing);
+
+      this.setNetworkState('finished');
+      this.setNetworkMessage('dashboard.syncedAt');
+      this.setPlotState('finished');
+      this.setPlotMessage('dashboard.syncedMsg');
+      this.setStatus('farming');
+
+      await client.startSubscription({
+        farmedBlockHandler: this.addFarmedBlock,
+        newBlockHandler: this.updateBlockNum,
+      });
+
+      util.infoLogger("PLOTTING PROGRESS | block subscription started")
     },
     setPlottingFinished(value: number) {
       this.plotting.finishedGB = value;

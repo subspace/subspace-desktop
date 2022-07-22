@@ -28,7 +28,7 @@ q-page.q-pa-lg.q-mr-lg.q-ml-lg
               q-badge(color="white" size="lg" text-color="black")
                 template(v-slot:default)
                   .q-pa-xs(style="font-size: 18px" v-if="progresspct > 0") {{ progresspct }}%
-                  .q-pa-xs(style="font-size: 14px") {{ store.plotting.status }}
+                  .q-pa-xs(style="font-size: 14px") {{ $t(store.plottingStatus.string, store.plottingStatus.values) }}
           q-linear-progress.absolute-right(
             :value="0.9"
             indeterminate
@@ -122,7 +122,6 @@ q-page.q-pa-lg.q-mr-lg.q-ml-lg
 import { defineComponent } from "vue"
 import * as util from "../lib/util"
 import introModal from "../components/introModal.vue"
-import { SyncState } from "../lib/types";
 import { useStore } from '../stores/store';
 
 let farmerTimer: number
@@ -158,46 +157,21 @@ export default defineComponent({
   },
   async mounted() {
     util.infoLogger("PLOTTING PROGRESS | getting plot config")
+    // TODO: probably can combine these two:
     this.store.setFirstLoad()
     this.store.setPlottingRemaining(this.store.plotSizeGB);
     util.infoLogger("PLOTTING PROGRESS | starting node")
     await this.store.startNode(this.$client);
     this.startTimers()
     util.infoLogger("PLOTTING PROGRESS | starting plotting")
-    await this.startSyncing();
+    await this.startFarmer();
   },
   unmounted() {
     if (farmerTimer) clearInterval(farmerTimer)
   },
   methods: {
-    async startSyncing(): Promise<void> {
-      this.store.setStatus('syncing');
-      const { plotDir, plotSizeGB } = this.store;
-      // TODO: remove client methods, call store methods instead: startNode, startFarming
-      const farmerStarted = await this.$client.startFarming(plotDir, plotSizeGB);
-      if (!farmerStarted) {
-        util.errorLogger("PLOTTING PROGRESS | Farmer start error!")
-      }
-      util.infoLogger("PLOTTING PROGRESS | farmer started")
-      await this.$client.startSubscription({
-        farmedBlockHandler: this.store.addFarmedBlock,
-        newBlockHandler: this.store.updateBlockNum,
-      });
-      util.infoLogger("PLOTTING PROGRESS | block subscription started")
-      const syncState = (await this.$client.getSyncState()).toJSON() as unknown as SyncState;
-      this.store.setSyncState(syncState);
-      let isSyncing = await this.$client.isSyncing();
-
-      do {
-        await new Promise((resolve) => setTimeout(resolve, 3000))
-        const syncState = (await this.$client.getSyncState()).toJSON() as unknown as SyncState;
-        this.store.setSyncState(syncState);
-        this.store.setPlottingStatus(`Syncing ${this.store.syncState.currentBlock} of ${this.store.syncState.highestBlock} blocks`);
-        this.store.setPlottingFinished((this.store.syncState.currentBlock * this.store.plotSizeGB) / this.store.syncState.highestBlock);
-        isSyncing = await this.$client.isSyncing();
-      } while (isSyncing);
-
-      this.store.setStatus('farming');
+    async startFarmer(): Promise<void> {
+      await this.store.startFarmer(this.$client);
       clearInterval(farmerTimer)
     },
     startTimers() {

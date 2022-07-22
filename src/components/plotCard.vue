@@ -14,7 +14,7 @@ q-card(bordered flat)
         q-spinner-box(color="grey" size="40px")
       .col
         .text-weight-light {{ $t('dashboard.status') }}
-        p {{ store.plot.message }}
+        p {{ $t(store.plot.message) }}
     .row.items-center.q-mt-sm
       .col-auto.q-mr-md
         q-icon(color="black" name="storage" size="40px")

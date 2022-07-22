@@ -31,7 +31,6 @@ import netCard from "../components/netCard.vue"
 import plotCard from "../components/plotCard.vue"
 import { FarmedBlock } from "../lib/types"
 import { useStore } from '../stores/store';
-import { SyncState } from "../lib/types";
 
 export default defineComponent({
   components: { farmedList, netCard, plotCard },
@@ -48,22 +47,9 @@ export default defineComponent({
     }
   },
   async mounted() {
-    // TODO: remove client methods, call store methods instead: startNode, startFarming
     if (!this.store.isFirstLoad) {
-      // TODO: fetch blocks from storage 
       util.infoLogger("DASHBOARD | starting node");
-      const { plotDir, plotSizeGB } = this.store;
       await this.store.startNode(this.$client);
-      util.infoLogger("DASHBOARD | starting farmer")
-      const farmerStarted = await this.$client.startFarming(plotDir, plotSizeGB)
-      if (!farmerStarted) {
-        util.errorLogger("DASHBOARD | Farmer start error!")
-      }
-      util.infoLogger("DASHBOARD | starting block subscription")
-      await this.$client.startSubscription({
-        farmedBlockHandler: this.store.addFarmedBlock,
-        newBlockHandler: this.store.updateBlockNum,
-      });
     }
 
     this.fetchPeersCount();// fetch initial peers count value
@@ -91,7 +77,7 @@ export default defineComponent({
       { immediate: true }
     )
 
-    await this.startSyncing();
+    await this.store.startFarmer(this.$client);
   },
   unmounted() {
     this.unsubscribe()
@@ -104,27 +90,6 @@ export default defineComponent({
     },
     expand(val: boolean) {
       this.expanded = val
-    },
-    async startSyncing() {
-      this.store.setStatus('syncing');
-      this.store.setNetworkState('verifying');
-      this.store.setNetworkMessage(this.$t('dashboard.verifyingNet'));
-
-      const syncState = (await this.$client.getSyncState()).toJSON() as unknown as SyncState;
-      this.store.setSyncState(syncState);
-      do {
-        const { currentBlock, highestBlock } = this.store.syncState;
-        this.store.setNetworkMessage(this.$t('dashboard.syncingMsg', { currentBlock, highestBlock }));
-        await new Promise((resolve) => setTimeout(resolve, 3000))
-        const syncState = (await this.$client.getSyncState()).toJSON() as unknown as SyncState;
-        this.store.setSyncState(syncState);
-      } while (this.store.syncState.currentBlock < this.store.syncState.highestBlock)
-
-      this.store.setNetworkState('finished');
-      this.store.setNetworkMessage(this.$t('dashboard.nodeIsSynced', { currentBlock: this.store.syncState.currentBlock }));
-      this.store.setPlotState('finished');
-      this.store.setPlotMessage(this.$t('dashboard.syncedMsg'));
-      this.store.setStatus('farming');
     },
     farmBlock(block: FarmedBlock) {
       Notify.create({

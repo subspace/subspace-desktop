@@ -12,7 +12,7 @@ q-card(bordered flat)
         q-spinner-orbit(color="grey" name="done" size="40px")
       .col
         .text-weight-light Status:
-        p {{ store.network.message }}
+        p {{ $t(store.networkMessage.string, store.networkMessage.values) }}
     .row.items-center.q-mt-sm
       .col
         .row.items-center

@@ -64,7 +64,6 @@
     "verifyingNet": "Verifying network data...",
     "plotActive": "Plot active",
     "syncedMsg": "Synced and farming",
-    "searchPeers": "Searching for peers...",
     "synced": "Synced and connected",
     "farmedBlock": "Farmed Block",
     "reward": "Reward",
@@ -79,7 +78,6 @@
     "loadingMsg": "Connecting to client...",
     "loadingStatus": "loading...",
     "syncingMsg": "Syncing node {currentBlock} of {highestBlock} Blocks",
-    "nodeIsSynced": "Node is synced at block: {currentBlock}",
     "syncedAt": "Synced at Block # {blockNumber}",
     "blockNum": "Block #"
   },
