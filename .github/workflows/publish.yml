@@ -9,7 +9,7 @@ jobs:
         build:
           # for ubuntu with arch, we need more testing with cross compilation libraries
           # since releasing on arm-linux is not a priority, we skipped it for now
-          - os: ubuntu-22.04
+          - os: ubuntu-20.04
             target: x86_64-unknown-linux-gnu
             suffix: ubuntu-x86_64
             rustflags: ""
@@ -86,7 +86,7 @@ jobs:
       - name: install webkit2gtk (Linux)
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libwebkit2gtk-4.0-dev libappindicator3-dev
+          sudo apt-get install -y --no-install-recommends libwebkit2gtk-4.0-dev libayatana-appindicator3-dev
         if: runner.os == 'Linux'
 
       # Imports PFX Certificate into keystore, allows Tauri to then sign the exe without being passed the private key.
@@ -111,7 +111,7 @@ jobs:
         if: runner.os == 'Linux'
 
       - name: Build (Ubuntu or Windows with OpenCL)
-        run: yarn build -c ./src-tauri/tauri.opencl.conf.json --target ${{ matrix.build.target }}
+        run: yarn build -c ./src-tauri/tauri.opencl.conf.json -- --target ${{ matrix.build.target }}
         if: (runner.os == 'Linux' || runner.os == 'Windows')
         env:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
@@ -128,7 +128,7 @@ jobs:
         if: runner.os == 'Windows'
 
       - name: Build (without OpenCL)
-        run: yarn build --target ${{ matrix.build.target }}
+        run: yarn build -- --target ${{ matrix.build.target }}
         env:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -214,3 +214,4 @@ jobs:
           tag_name: ${{ steps.extract_version.outputs.version }}
           fail_on_unmatched_files: true
           files: executables/*
+# TODO: use the monorepo approach for publishing a release
