@@ -30,7 +30,6 @@ import farmedList from "../components/farmedList.vue"
 import netCard from "../components/netCard.vue"
 import plotCard from "../components/plotCard.vue"
 import { FarmedBlock } from "../lib/types"
-import { appConfig } from "../lib/appConfig"
 import { useStore } from '../stores/store';
 
 export default defineComponent({
@@ -49,7 +48,6 @@ export default defineComponent({
       plot: {
         state: "starting",
         message: this.$t('dashboard.initializing'),
-        plotSizeGB: 0
       },
       expanded: false,
       util,
@@ -59,21 +57,18 @@ export default defineComponent({
     }
   },
   async mounted() {
-    const config = await appConfig.read()
-    this.plot.plotSizeGB = config.plot.sizeGB
-
     // TODO: remove client methods, call store methods instead: startNode, startFarming
     if (!this.store.isFirstLoad) {
       // TODO: fetch blocks from storage 
       util.infoLogger("DASHBOARD | starting node");
-      const { nodeName } = this.store;
+      const { nodeName, plotDir, plotSizeGB } = this.store;
       if (nodeName !== "") {
-        await this.$client.startNode(config.plot.location, nodeName)
+        await this.$client.startNode(plotDir, nodeName)
       } else {
         util.errorLogger("DASHBOARD | node name was empty when tried to start node")
       }
       util.infoLogger("DASHBOARD | starting farmer")
-      const farmerStarted = await this.$client.startFarming(config.plot.location, config.plot.sizeGB)
+      const farmerStarted = await this.$client.startFarming(plotDir, plotSizeGB)
       if (!farmerStarted) {
         util.errorLogger("DASHBOARD | Farmer start error!")
       }
@@ -127,12 +122,9 @@ export default defineComponent({
       this.expanded = val
     },
     async checkFarmerAndPlot() {
+      // TODO: clarify
       this.plot.state = "verifying"
       this.plot.message = this.$t('dashboard.verifyingPlot')
-
-      const config = await appConfig.read()
-      this.plot.plotSizeGB = config.plot.sizeGB
-
       this.plot.message = this.$t('dashboard.syncedMsg')
       this.plot.state = "finished"
     },

@@ -20,16 +20,21 @@ q-card(bordered flat)
         q-icon(color="black" name="storage" size="40px")
       .col
         .text-weight-light {{ $t('dashboard.allocated') }}
-        p {{ plot.plotSizeGB }} GB
+        p {{ store.plotSizeGB }} GB
 </template>
 
 <script lang="ts" >
 import { defineComponent } from "vue"
 import * as util from "../lib/util"
+import { useStore } from '../stores/store';
 
 export default defineComponent({
   props: {
     plot: { type: Object, required: true }
+  },
+  setup() {
+    const store = useStore();
+    return { store };
   },
   data() {
     return { util }
