@@ -21,6 +21,12 @@ interface Plot {
   message: string;
 }
 
+interface Plotting {
+  finishedGB: number;
+  remainingGB: number;
+  status: string;
+}
+
 interface State {
   status: Status;
   plotSizeGB: number;
@@ -32,6 +38,7 @@ interface State {
   isFirstLoad: boolean;
   network: Network;
   plot: Plot;
+  plotting: Plotting;
 }
 
 export const useStore = defineStore('store', {
@@ -61,6 +68,12 @@ export const useStore = defineStore('store', {
       state: 'starting',
       // TODO: set int string
       message: 'dashboard.initializing', // this.$t('dashboard.initializing')
+    },
+    plotting: {
+      finishedGB: 0,
+      remainingGB: 0,
+      // TODO: set int string
+      status: 'plottingProgress.fetchingPlot',
     }
   }),
 
@@ -78,6 +91,12 @@ export const useStore = defineStore('store', {
     totalEarned(): number {
       return this.blocksByAddress
         .reduce((agg: number, { blockReward, feeReward }) => blockReward + feeReward + agg, 0)
+    },
+    plottingFinished(): number {
+      return parseFloat(this.plotting.finishedGB.toFixed(2))
+    },
+    plottingRemaining(): number {
+      return parseFloat((this.plotSizeGB - this.plotting.finishedGB).toFixed(2))
     }
   },
 
@@ -138,16 +157,16 @@ export const useStore = defineStore('store', {
       this.rewardAddress = config.rewardAddress;
       this.farmedBlocks = getStoredBlocks();
     },
-    setNetworkState (state: string) {
+    setNetworkState(state: string) {
       this.network.state = state;
     },
-    setNetworkMessage (message: string) {
+    setNetworkMessage(message: string) {
       this.network.message = message;
     },
-    setPlotState (state: string) {
+    setPlotState(state: string) {
       this.plot.state = state;
     },
-    setPlotMessage (message: string) {
+    setPlotMessage(message: string) {
       this.plot.message = message;
     },
     // TODO: find better way to provide client
@@ -160,5 +179,14 @@ export const useStore = defineStore('store', {
         util.errorLogger("NODE START | node name and plot directory are required to start node");
       }
     },
+    setPlottingFinished(value: number) {
+      this.plotting.finishedGB = value;
+    },
+    setPlottingRemaining(value: number) {
+      this.plotting.remainingGB = value;
+    },
+    setPlottingStatus(status: string) {
+      this.plotting.status = status;
+    }
   }
 });

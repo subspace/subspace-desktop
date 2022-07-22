@@ -28,7 +28,7 @@ q-page.q-pa-lg.q-mr-lg.q-ml-lg
               q-badge(color="white" size="lg" text-color="black")
                 template(v-slot:default)
                   .q-pa-xs(style="font-size: 18px" v-if="progresspct > 0") {{ progresspct }}%
-                  .q-pa-xs(style="font-size: 14px") {{ plottingData.status }}
+                  .q-pa-xs(style="font-size: 14px") {{ store.plotting.status }}
           q-linear-progress.absolute-right(
             :value="0.9"
             indeterminate
@@ -52,7 +52,7 @@ q-page.q-pa-lg.q-mr-lg.q-ml-lg
             outlined
             readonly
             suffix="GB"
-            v-model="plottingData.finishedGB"
+            v-model="store.plottingFinished"
           )
           .q-mt-sm {{ $t('plottingProgress.remaining') }}
           q-input.bg-white(
@@ -61,7 +61,7 @@ q-page.q-pa-lg.q-mr-lg.q-ml-lg
             outlined
             readonly
             suffix="GB"
-            v-model="plottingData.remainingGB"
+            v-model="store.plottingRemaining"
           )
         .col-2
         .col-3.relative-position
@@ -136,11 +136,6 @@ export default defineComponent({
     return {
       elapsedms: 0,
       remainingms: 0,
-      plottingData: {
-        finishedGB: 0,
-        remainingGB: 0,
-        status: this.$t('plottingProgress.fetchingPlot'),
-      },
     }
   },
   computed: {
@@ -161,23 +156,10 @@ export default defineComponent({
       return util.formatMS(this.elapsedms)
     }
   },
-  watch: {
-    "plottingData.finishedGB"(val) {
-      this.plottingData.finishedGB = parseFloat(
-        this.plottingData.finishedGB.toFixed(2)
-      )
-      this.plottingData.remainingGB = parseFloat(
-        (this.store.plotSizeGB - val).toFixed(2)
-      )
-      if (this.plottingData.finishedGB >= this.store.plotSizeGB) {
-        this.plottingData.finishedGB = this.store.plotSizeGB
-      }
-    },
-  },
   async mounted() {
     util.infoLogger("PLOTTING PROGRESS | getting plot config")
     this.store.setFirstLoad()
-    this.plottingData.remainingGB = this.store.plotSizeGB;
+    this.store.setPlottingRemaining(this.store.plotSizeGB);
     util.infoLogger("PLOTTING PROGRESS | starting node")
     await this.store.startNode(this.$client);
     this.startTimers()
@@ -188,15 +170,6 @@ export default defineComponent({
     if (farmerTimer) clearInterval(farmerTimer)
   },
   methods: {
-    // async startNode() {
-    //   const { nodeName, plotDir } = this.store;
-    //   if (nodeName && plotDir) {
-    //     this.store.setStatus('startingNode');
-    //     await this.$client.startNode(plotDir, nodeName)
-    //   } else {
-    //     util.errorLogger("PLOTTING PROGRESS | node name and plot directory are required to start node");
-    //   }
-    // },
     async startSyncing(): Promise<void> {
       this.store.setStatus('syncing');
       const { plotDir, plotSizeGB } = this.store;
@@ -219,13 +192,13 @@ export default defineComponent({
         await new Promise((resolve) => setTimeout(resolve, 3000))
         const syncState = (await this.$client.getSyncState()).toJSON() as unknown as SyncState;
         this.store.setSyncState(syncState);
-        this.plottingData.status = `Syncing ${this.store.syncState.currentBlock} of ${this.store.syncState.highestBlock} blocks`
-        this.plottingData.finishedGB = (this.store.syncState.currentBlock * this.store.plotSizeGB) / this.store.syncState.highestBlock;
+        this.store.setPlottingStatus(`Syncing ${this.store.syncState.currentBlock} of ${this.store.syncState.highestBlock} blocks`);
+        this.store.setPlottingFinished((this.store.syncState.currentBlock * this.store.plotSizeGB) / this.store.syncState.highestBlock);
         isSyncing = await this.$client.isSyncing();
       } while (isSyncing);
 
-      clearInterval(farmerTimer)
       this.store.setStatus('farming');
+      clearInterval(farmerTimer)
     },
     startTimers() {
       farmerTimer = window.setInterval(() => {
