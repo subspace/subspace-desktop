@@ -2,7 +2,13 @@
 q-page.q-pl-lg.q-pr-lg.q-pt-md
   .row.justify-center
   .row.q-pb-sm.justify-center
-  div(v-if="!loading")
+  div(v-if="store.status === 'startingNode'")
+    .flex
+      .absolute-center
+        .row.justify-center
+          q-spinner-orbit(color="grey" size="120px")
+        h4 {{ $t('dashboard.loadingMsg')}}
+  div(v-else)
     .row.q-gutter-md.q-pb-md(v-if="!expanded")
       .col
         plotCard
@@ -14,12 +20,6 @@ q-page.q-pl-lg.q-pr-lg.q-pt-md
           :expanded="expanded"
           @expand="expand"
         )
-  div(v-else)
-    .flex
-      .absolute-center
-        .row.justify-center
-          q-spinner-orbit(color="grey" size="120px")
-        h4 {{ $t('dashboard.loadingMsg')}}
 </template>
 
 <script lang="ts">
@@ -43,7 +43,6 @@ export default defineComponent({
     return {
       expanded: false,
       util,
-      loading: true,
       unsubscribe: () => null,
       peerInterval: 0,
     }
@@ -53,12 +52,8 @@ export default defineComponent({
     if (!this.store.isFirstLoad) {
       // TODO: fetch blocks from storage 
       util.infoLogger("DASHBOARD | starting node");
-      const { nodeName, plotDir, plotSizeGB } = this.store;
-      if (nodeName !== "") {
-        await this.$client.startNode(plotDir, nodeName)
-      } else {
-        util.errorLogger("DASHBOARD | node name was empty when tried to start node")
-      }
+      const { plotDir, plotSizeGB } = this.store;
+      await this.store.startNode(this.$client);
       util.infoLogger("DASHBOARD | starting farmer")
       const farmerStarted = await this.$client.startFarming(plotDir, plotSizeGB)
       if (!farmerStarted) {
@@ -70,8 +65,6 @@ export default defineComponent({
         newBlockHandler: this.store.updateBlockNum,
       });
     }
-
-    this.loading = false
 
     this.fetchPeersCount();// fetch initial peers count value
     this.peerInterval = window.setInterval(this.fetchPeersCount, 30000);

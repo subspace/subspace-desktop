@@ -5,8 +5,9 @@ import { appConfig } from "../lib/appConfig";
 import * as util from "../lib/util";
 import { FarmedBlock } from '../lib/types';
 import { storeBlocks, getStoredBlocks } from '../lib/blockStorage';
+import { Client } from '../lib/client';
 
-export type Status = 'idle' | 'syncing' | 'farming';
+export type Status = 'idle' | 'startingNode' | 'syncing' | 'farming';
 
 interface Network {
   peers: number;
@@ -148,6 +149,16 @@ export const useStore = defineStore('store', {
     },
     setPlotMessage (message: string) {
       this.plot.message = message;
+    },
+    // TODO: find better way to provide client
+    async startNode(client: Client) {
+      if (this.nodeName && this.plotDir) {
+        this.setStatus('startingNode');
+        await client.startNode(this.plotDir, this.nodeName);
+      } else {
+        // TODO: create error state and update here
+        util.errorLogger("NODE START | node name and plot directory are required to start node");
+      }
     },
   }
 });

@@ -179,7 +179,7 @@ export default defineComponent({
     this.store.setFirstLoad()
     this.plottingData.remainingGB = this.store.plotSizeGB;
     util.infoLogger("PLOTTING PROGRESS | starting node")
-    await this.startNode();
+    await this.store.startNode(this.$client);
     this.startTimers()
     util.infoLogger("PLOTTING PROGRESS | starting plotting")
     await this.startSyncing();
@@ -188,14 +188,15 @@ export default defineComponent({
     if (farmerTimer) clearInterval(farmerTimer)
   },
   methods: {
-    async startNode() {
-      const { nodeName, plotDir } = this.store;
-      if (nodeName && plotDir) {
-        await this.$client.startNode(plotDir, nodeName)
-      } else {
-        util.errorLogger("PLOTTING PROGRESS | node name and plot directory are required to start node");
-      }
-    },
+    // async startNode() {
+    //   const { nodeName, plotDir } = this.store;
+    //   if (nodeName && plotDir) {
+    //     this.store.setStatus('startingNode');
+    //     await this.$client.startNode(plotDir, nodeName)
+    //   } else {
+    //     util.errorLogger("PLOTTING PROGRESS | node name and plot directory are required to start node");
+    //   }
+    // },
     async startSyncing(): Promise<void> {
       this.store.setStatus('syncing');
       const { plotDir, plotSizeGB } = this.store;
