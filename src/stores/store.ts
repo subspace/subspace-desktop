@@ -6,11 +6,7 @@ import * as util from "../lib/util";
 import { FarmedBlock } from '../lib/types';
 import { storeBlocks, getStoredBlocks } from '../lib/blockStorage';
 
-export enum Status {
-  'idle',
-  'syncing',
-  'farming'
-}
+export type Status = 'idle' | 'syncing' | 'farming';
 
 interface Network {
   peers: number;
@@ -39,7 +35,7 @@ interface State {
 
 export const useStore = defineStore('store', {
   state: (): State => ({
-    status: Status.idle,
+    status: 'idle',
     plotSizeGB: 1,
     plotDir: '/',
     farmedBlocks: [],

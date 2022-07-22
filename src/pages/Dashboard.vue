@@ -30,7 +30,7 @@ import farmedList from "../components/farmedList.vue"
 import netCard from "../components/netCard.vue"
 import plotCard from "../components/plotCard.vue"
 import { FarmedBlock } from "../lib/types"
-import { useStore, Status } from '../stores/store';
+import { useStore } from '../stores/store';
 import { SyncState } from "../lib/types";
 
 export default defineComponent({
@@ -113,7 +113,7 @@ export default defineComponent({
       this.expanded = val
     },
     async startSyncing() {
-      this.store.setStatus(Status.syncing);
+      this.store.setStatus('syncing');
       this.store.setNetworkState('verifying');
       this.store.setNetworkMessage(this.$t('dashboard.verifyingNet'));
 
@@ -131,7 +131,7 @@ export default defineComponent({
       this.store.setNetworkMessage(this.$t('dashboard.nodeIsSynced', { currentBlock: this.store.syncState.currentBlock }));
       this.store.setPlotState('finished');
       this.store.setPlotMessage(this.$t('dashboard.syncedMsg'));
-      this.store.setStatus(Status.farming);
+      this.store.setStatus('farming');
     },
     farmBlock(block: FarmedBlock) {
       Notify.create({

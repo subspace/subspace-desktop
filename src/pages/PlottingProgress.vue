@@ -34,7 +34,7 @@ q-page.q-pa-lg.q-mr-lg.q-ml-lg
             indeterminate
             style="height: 1px; top: 39px"
             track-color="transparent"
-            v-if="!plotFinished"
+            v-if="store.status !== 'farming'"
           )
       .row.justify-center.q-gutter-md.q-pt-md
         .col-1
@@ -112,9 +112,9 @@ q-page.q-pa-lg.q-mr-lg.q-ml-lg
         icon-right="play_arrow"
         outline
         size="lg"
-        :disable="!plotFinished"
+        :disable="store.status !== 'farming'"
       )
-      q-tooltip.q-pa-md(v-if="!plotFinished")
+      q-tooltip.q-pa-md(v-if="store.status !== 'farming'")
         p.q-mb-lg {{ $t('plottingProgress.waitPlotting') }}
 </template>
 
@@ -123,7 +123,7 @@ import { defineComponent } from "vue"
 import * as util from "../lib/util"
 import introModal from "../components/introModal.vue"
 import { SyncState } from "../lib/types";
-import { useStore, Status } from '../stores/store';
+import { useStore } from '../stores/store';
 
 let farmerTimer: number
 
@@ -141,7 +141,6 @@ export default defineComponent({
         remainingGB: 0,
         status: this.$t('plottingProgress.fetchingPlot'),
       },
-      plotFinished: false,
     }
   },
   computed: {
@@ -153,7 +152,7 @@ export default defineComponent({
     },
     printRemainingTime(): string {
       const val =
-        this.plotFinished || this.elapsedms === 0
+        this.store.status === 'farming' || this.elapsedms === 0
           ? util.formatMS(0)
           : util.formatMS(this.remainingms)
       return val
@@ -198,7 +197,7 @@ export default defineComponent({
       }
     },
     async startSyncing(): Promise<void> {
-      this.store.setStatus(Status.syncing);
+      this.store.setStatus('syncing');
       const { plotDir, plotSizeGB } = this.store;
       // TODO: remove client methods, call store methods instead: startNode, startFarming
       const farmerStarted = await this.$client.startFarming(plotDir, plotSizeGB);
@@ -224,9 +223,8 @@ export default defineComponent({
         isSyncing = await this.$client.isSyncing();
       } while (isSyncing);
 
-      this.plotFinished = true
       clearInterval(farmerTimer)
-      this.store.setStatus(Status.farming);
+      this.store.setStatus('farming');
     },
     startTimers() {
       farmerTimer = window.setInterval(() => {
