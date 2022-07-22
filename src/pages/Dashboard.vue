@@ -42,19 +42,10 @@ export default defineComponent({
     return {
       expanded: false,
       util,
-      unsubscribe: () => null,
       peerInterval: 0,
     }
   },
   async mounted() {
-    if (!this.store.isFirstLoad) {
-      util.infoLogger("DASHBOARD | starting node");
-      await this.store.startNode(this.$client);
-    }
-
-    this.fetchPeersCount();// fetch initial peers count value
-    this.peerInterval = window.setInterval(this.fetchPeersCount, 30000);
-
     // watch for farmed blocks
     watch(
       () => this.store.farmedBlocks.length,
@@ -77,10 +68,17 @@ export default defineComponent({
       { immediate: true }
     )
 
+    if (!this.store.isFirstLoad) {
+      util.infoLogger("DASHBOARD | starting node");
+      await this.store.startNode(this.$client);
+    }
+
+    // TODO: consider moving fetching peers into store 
+    this.fetchPeersCount(); // fetch initial peers count value
+    this.peerInterval = window.setInterval(this.fetchPeersCount, 30000);
     await this.store.startFarmer(this.$client);
   },
   unmounted() {
-    this.unsubscribe()
     clearInterval(this.peerInterval)
   },
   methods: {

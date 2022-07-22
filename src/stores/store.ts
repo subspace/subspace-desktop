@@ -58,21 +58,18 @@ export const useStore = defineStore('store', {
       syncedAtNum: 0,
       peers: 0,
       state: 'starting',
-      // TODO: set int string
-      message: 'dashboard.initializing', // this.$t('dashboard.initializing')
+      message: 'dashboard.initializing',
     },
     rewardAddress: '',
     // TODO: it is confusing to start with 'false' value, replace with better mechanism
     isFirstLoad: false,
     plot: {
       state: 'starting',
-      // TODO: set int string
-      message: 'dashboard.initializing', // this.$t('dashboard.initializing')
+      message: 'dashboard.initializing',
     },
     plotting: {
       finishedGB: 0,
       remainingGB: 0,
-      // TODO: set int string
       status: 'plottingProgress.fetchingPlot',
     }
   }),

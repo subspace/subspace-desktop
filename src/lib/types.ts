@@ -1,4 +1,3 @@
-import { Emitter } from "mitt"
 import { ApexOptions } from "apexcharts"
 import type { AccountId32 } from "@polkadot/types/interfaces"
 import type { Struct, u64 } from "@polkadot/types"
@@ -24,44 +23,12 @@ export interface ChildReturnData {
   stderr: string[]
 }
 
-export interface PeerData {
-  status: "disconnected" | "unstable" | "connected" | string
-  name: string // do peers have some string identifier?
-  ip: string
-  receivedBytes: number
-  sentBytes: number
-}
-
-export interface ClientNetwork {
-  status: "disconnected" | "unstable" | "connected" | string
-  peers: PeerData[]
-  details: {
-    // physical network interface
-    // more granular connection information here
-  }
-}
-
-export interface ClientPlot {
-  status: "active" | "verifying" | "corrupted" | "syncing" | string
-  plotSizeGB: number // size of the plot file in GigaBytes
-  plotFile: string // drive directory where the plot file is located
-  details: {
-    // additional information could be placed here
-  }
-}
-
 export interface Block {
   id: string
   time: Date
   transactions: string[]
   reward: number
   fees: number
-}
-
-export interface ClientFarming {
-  status: "active" | "paused" | string
-  farmed: FarmedBlock[]
-  events: Emitter<any>
 }
 
 export const chartOptions: ApexOptions = {
