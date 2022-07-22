@@ -31,6 +31,7 @@ import netCard from "../components/netCard.vue"
 import plotCard from "../components/plotCard.vue"
 import { FarmedBlock } from "../lib/types"
 import { useStore } from '../stores/store';
+import { SyncState } from "../lib/types";
 
 export default defineComponent({
   components: { farmedList, netCard, plotCard },
@@ -132,15 +133,17 @@ export default defineComponent({
       this.network.state = "verifying"
       this.network.message = this.$t('dashboard.verifyingNet')
 
-      let syncState = await this.$client.getSyncState()
+      const syncState = (await this.$client.getSyncState()).toJSON() as unknown as SyncState;
+      this.store.setSyncState(syncState);
       do {
-        const { currentBlock, highestBlock } = syncState;
+        const { currentBlock, highestBlock } = this.store.syncState;
         this.network.message = this.$t('dashboard.syncingMsg', { currentBlock, highestBlock });
         await new Promise((resolve) => setTimeout(resolve, 3000))
-        syncState = await this.$client.getSyncState()
-      } while (syncState.currentBlock.toNumber() < syncState.highestBlock.unwrapOrDefault().toNumber())
+        const syncState = (await this.$client.getSyncState()).toJSON() as unknown as SyncState;
+        this.store.setSyncState(syncState);
+      } while (this.store.syncState.currentBlock < this.store.syncState.highestBlock)
 
-      this.network.message = this.$t('dashboard.nodeIsSynced', { currentBlock: syncState.currentBlock });
+      this.network.message = this.$t('dashboard.nodeIsSynced', { currentBlock: this.store.syncState.currentBlock });
       this.network.state = "finished"
     },
     farmBlock(block: FarmedBlock) {

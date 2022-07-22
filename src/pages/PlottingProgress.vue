@@ -142,17 +142,12 @@ export default defineComponent({
         status: this.$t('plottingProgress.fetchingPlot'),
       },
       plotFinished: false,
-      syncState: {
-        currentBlock: 0,
-        highestBlock: 0,
-        startingBlock: 0,
-      }
     }
   },
   computed: {
     progresspct(): number {
       const progress = parseFloat(
-        ((this.syncState.currentBlock * 100) / this.syncState.highestBlock).toFixed(2)
+        ((this.store.syncState.currentBlock * 100) / this.store.syncState.highestBlock).toFixed(2)
       )
       return isNaN(progress) ? 0 : progress <= 100 ? progress : 100
     },
@@ -215,14 +210,16 @@ export default defineComponent({
         newBlockHandler: this.store.updateBlockNum,
       });
       util.infoLogger("PLOTTING PROGRESS | block subscription started")
-      this.syncState = (await this.$client.getSyncState()).toJSON() as unknown as SyncState;
+      const syncState = (await this.$client.getSyncState()).toJSON() as unknown as SyncState;
+      this.store.setSyncState(syncState);
       let isSyncing = await this.$client.isSyncing();
 
       do {
         await new Promise((resolve) => setTimeout(resolve, 3000))
-        this.syncState = (await this.$client.getSyncState()).toJSON() as unknown as SyncState;
-        this.plottingData.status = `Syncing ${this.syncState.currentBlock} of ${this.syncState.highestBlock} blocks`
-        this.plottingData.finishedGB = (this.syncState.currentBlock * this.store.plotSizeGB) / this.syncState.highestBlock;
+        const syncState = (await this.$client.getSyncState()).toJSON() as unknown as SyncState;
+        this.store.setSyncState(syncState);
+        this.plottingData.status = `Syncing ${this.store.syncState.currentBlock} of ${this.store.syncState.highestBlock} blocks`
+        this.plottingData.finishedGB = (this.store.syncState.currentBlock * this.store.plotSizeGB) / this.store.syncState.highestBlock;
         isSyncing = await this.$client.isSyncing();
       } while (isSyncing);
 
@@ -232,7 +229,7 @@ export default defineComponent({
     startTimers() {
       farmerTimer = window.setInterval(() => {
         this.elapsedms += 1000;
-        const ms = (this.elapsedms * this.syncState.highestBlock) / (this.syncState.currentBlock || 1) - this.elapsedms;
+        const ms = (this.elapsedms * this.store.syncState.highestBlock) / (this.store.syncState.currentBlock || 1) - this.elapsedms;
         this.remainingms = util.toFixed(ms, 2);
       }, 1000)
     },
