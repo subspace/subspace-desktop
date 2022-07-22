@@ -19,6 +19,11 @@ interface Network {
   message: string;
 }
 
+interface Plot {
+  state: string;
+  message: string;
+}
+
 interface State {
   status: Status;
   plotSizeGB: number;
@@ -29,6 +34,7 @@ interface State {
   rewardAddress: string;
   isFirstLoad: boolean;
   network: Network;
+  plot: Plot;
 }
 
 export const useStore = defineStore('store', {
@@ -54,6 +60,11 @@ export const useStore = defineStore('store', {
     rewardAddress: '',
     // TODO: it is confusing to start with 'false' value, replace with better mechanism
     isFirstLoad: false,
+    plot: {
+      state: 'starting',
+      // TODO: set int string
+      message: 'dashboard.initializing', // this.$t('dashboard.initializing')
+    }
   }),
 
   getters: {
@@ -137,6 +148,12 @@ export const useStore = defineStore('store', {
     },
     setNetworkMessage (message: string) {
       this.network.message = message;
+    },
+    setPlotState (state: string) {
+      this.plot.state = state;
+    },
+    setPlotMessage (message: string) {
+      this.plot.message = message;
     },
   }
 });

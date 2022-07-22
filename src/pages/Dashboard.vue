@@ -5,7 +5,7 @@ q-page.q-pl-lg.q-pr-lg.q-pt-md
   div(v-if="!loading")
     .row.q-gutter-md.q-pb-md(v-if="!expanded")
       .col
-        plotCard(:plot="plot")
+        plotCard
       .col
         netCard
     .row.q-gutter-md
@@ -41,10 +41,6 @@ export default defineComponent({
   },
   data() {
     return {
-      plot: {
-        state: "starting",
-        message: this.$t('dashboard.initializing'),
-      },
       expanded: false,
       util,
       loading: true,
@@ -103,7 +99,9 @@ export default defineComponent({
     )
 
     await this.checkNodeAndNetwork()
-    await this.checkFarmerAndPlot()
+    
+    this.store.setPlotState('finished');
+    this.store.setPlotMessage(this.$t('dashboard.syncedMsg'));
   },
   unmounted() {
     this.unsubscribe()
@@ -116,13 +114,6 @@ export default defineComponent({
     },
     expand(val: boolean) {
       this.expanded = val
-    },
-    async checkFarmerAndPlot() {
-      // TODO: clarify
-      this.plot.state = "verifying"
-      this.plot.message = this.$t('dashboard.verifyingPlot')
-      this.plot.message = this.$t('dashboard.syncedMsg')
-      this.plot.state = "finished"
     },
     async checkNodeAndNetwork() {
       this.store.setNetworkState('verifying');

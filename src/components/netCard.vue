@@ -21,18 +21,10 @@ q-card(bordered flat)
           .col
             .text-weight-light Peers:
             p {{ store.network.peers }}
-    //-   .col
-    //-     .row.items-center
-    //-       .col-auto.q-mr-md
-    //-         q-icon(color="black" name="south" size="40px")
-    //-       .col
-    //-         .text-weight-light Downloaded:
-    //-         p 3600 GB
 </template>
 
 <script lang="ts" >
 import { defineComponent } from "vue"
-import * as util from "../lib/util"
 import { useStore } from '../stores/store';
 
 export default defineComponent({
@@ -40,9 +32,6 @@ export default defineComponent({
     const store = useStore();
     return { store };
   },
-  data() {
-    return { util }
-  }
 })
 </script>
 
