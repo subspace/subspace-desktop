@@ -6,7 +6,7 @@ import * as util from "../lib/util";
 import { FarmedBlock } from '../lib/types';
 import { storeBlocks, getStoredBlocks } from '../lib/blockStorage';
 
-enum Status {
+export enum Status {
   'idle',
   'syncing',
   'farming'
@@ -104,7 +104,7 @@ export const useStore = defineStore('store', {
     setStatus(status: Status) {
       this.status = status;
     },
-    async startPlotting() {
+    async confirmPlottingSetup() {
       const nodeName = util.generateNodeName();
       this.setNodeName(nodeName);
 
@@ -115,8 +115,6 @@ export const useStore = defineStore('store', {
         },
         nodeName,
       });
-
-      this.setStatus(Status.syncing);
     },
     setRewardAddress(address: string) {
       this.rewardAddress = address;

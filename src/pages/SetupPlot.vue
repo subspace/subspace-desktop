@@ -262,7 +262,7 @@ export default defineComponent({
       await appData.createCustomDataDir(this.store.plotDir)
       util.infoLogger("SETUP PLOT | custom directory created")
       await this.checkIdentity();
-      await this.store.startPlotting();
+      await this.store.confirmPlottingSetup();
       this.$router.replace({ name: "plottingProgress" });
     },
     async updateDriveStats() {
@@ -276,7 +276,9 @@ export default defineComponent({
         .catch((error: unknown) => {
           util.errorLogger(error)
         })
-      if (result) this.store.plotDir = result
+      if (result) {
+        this.store.setPlotDir(result);
+      }
       await this.updateDriveStats()
     },
     async checkIdentity() {

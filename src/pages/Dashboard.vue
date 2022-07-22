@@ -30,7 +30,7 @@ import farmedList from "../components/farmedList.vue"
 import netCard from "../components/netCard.vue"
 import plotCard from "../components/plotCard.vue"
 import { FarmedBlock } from "../lib/types"
-import { useStore } from '../stores/store';
+import { useStore, Status } from '../stores/store';
 import { SyncState } from "../lib/types";
 
 export default defineComponent({
@@ -98,10 +98,7 @@ export default defineComponent({
       { immediate: true }
     )
 
-    await this.checkNodeAndNetwork()
-    
-    this.store.setPlotState('finished');
-    this.store.setPlotMessage(this.$t('dashboard.syncedMsg'));
+    await this.startSyncing();
   },
   unmounted() {
     this.unsubscribe()
@@ -115,7 +112,8 @@ export default defineComponent({
     expand(val: boolean) {
       this.expanded = val
     },
-    async checkNodeAndNetwork() {
+    async startSyncing() {
+      this.store.setStatus(Status.syncing);
       this.store.setNetworkState('verifying');
       this.store.setNetworkMessage(this.$t('dashboard.verifyingNet'));
 
@@ -129,8 +127,11 @@ export default defineComponent({
         this.store.setSyncState(syncState);
       } while (this.store.syncState.currentBlock < this.store.syncState.highestBlock)
 
-      this.store.setNetworkMessage(this.$t('dashboard.nodeIsSynced', { currentBlock: this.store.syncState.currentBlock }));
       this.store.setNetworkState('finished');
+      this.store.setNetworkMessage(this.$t('dashboard.nodeIsSynced', { currentBlock: this.store.syncState.currentBlock }));
+      this.store.setPlotState('finished');
+      this.store.setPlotMessage(this.$t('dashboard.syncedMsg'));
+      this.store.setStatus(Status.farming);
     },
     farmBlock(block: FarmedBlock) {
       Notify.create({

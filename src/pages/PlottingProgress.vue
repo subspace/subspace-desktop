@@ -123,7 +123,7 @@ import { defineComponent } from "vue"
 import * as util from "../lib/util"
 import introModal from "../components/introModal.vue"
 import { SyncState } from "../lib/types";
-import { useStore } from '../stores/store';
+import { useStore, Status } from '../stores/store';
 
 let farmerTimer: number
 
@@ -198,6 +198,7 @@ export default defineComponent({
       }
     },
     async startSyncing(): Promise<void> {
+      this.store.setStatus(Status.syncing);
       const { plotDir, plotSizeGB } = this.store;
       // TODO: remove client methods, call store methods instead: startNode, startFarming
       const farmerStarted = await this.$client.startFarming(plotDir, plotSizeGB);
@@ -225,6 +226,7 @@ export default defineComponent({
 
       this.plotFinished = true
       clearInterval(farmerTimer)
+      this.store.setStatus(Status.farming);
     },
     startTimers() {
       farmerTimer = window.setInterval(() => {
