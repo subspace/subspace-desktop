@@ -3,9 +3,11 @@ on:
   push:
     paths-ignore:
       - "**.md"
+      - "**/publish.yml"
   pull_request:
     paths-ignore:
       - "**.md"
+      - "**/publish.yml"
 
 env:
   # Not needed in CI, should make things a bit faster

@@ -10,5 +10,8 @@
     "strictNullChecks": true,
     "experimentalDecorators": true,
     "noImplicitReturns": true
-  }
+  },
+  "include": [
+    "src"
+  ]
 }
