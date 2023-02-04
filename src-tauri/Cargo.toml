@@ -38,7 +38,7 @@ subspace-runtime = { git = "https://github.com/subspace/subspace", rev = "b30ca3
 subspace-runtime-primitives = { git = "https://github.com/subspace/subspace", rev = "b30ca37d34da30148f370dc16f93cc606f19c40d" }
 subspace-service = { git = "https://github.com/subspace/subspace", rev = "b30ca37d34da30148f370dc16f93cc606f19c40d" }
 subspace-solving = { git = "https://github.com/subspace/subspace", rev = "b30ca37d34da30148f370dc16f93cc606f19c40d" }
-tokio = { version = "1.11.0", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.20.4", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1.31"
 tracing-appender = "0.2"
 tracing-bunyan-formatter = "0.3.2"
